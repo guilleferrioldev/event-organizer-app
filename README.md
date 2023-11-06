@@ -1,2 +1,2 @@
-# event-planner-app
+# event-organizer-app
 An event organization app
