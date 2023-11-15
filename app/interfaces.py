@@ -4,6 +4,15 @@ from abc import ABC, abstractmethod
 from typing import List, Callable
 from PIL import Image
 
+def singleton(cls):
+    """Singleton decorator"""
+    __instance = dict()
+
+    def wrapper(*args, **kwargs):
+        if cls not in __instance:
+            __instance[cls] = cls(*args, **kwargs)
+        return __instance[cls]
+    return  wrapper
 
 ####################
 # LABELS
@@ -62,7 +71,6 @@ class Scrollable(InterfaceScrollableFrame):
     """Class to create concrete scrollable frames"""
     def __post_init__(self):
         InterfaceScrollableFrame.__post_init__(self)   
-        
 
 
 ####################
@@ -76,10 +84,11 @@ class InterfaceEntry(ABC, ctk.CTkEntry):
     rely: float
     relwidth: float
     relheight: float
+    placeholder_text : str
     
     @abstractmethod
     def __post_init__(self):
-        ctk.CTkEntry.__init__(self, master = self.master, placeholder_text = "Buscar", font = ctk.CTkFont("Arial", 15))
+        ctk.CTkEntry.__init__(self, master = self.master, placeholder_text = self.placeholder_text, font = ctk.CTkFont("Arial", 15))
         
         self.place(relx = self.relx, rely = self.rely, relwidth = self.relwidth, relheight = self.relheight)
 
@@ -156,7 +165,7 @@ class InterfaceImageButton(ABC, ctk.CTkButton):
     """Interface to generate image buttons"""
     master: ctk.CTkFrame
     path: str
-    #command: Callable
+    command: Callable
     relx: float
     rely: float
     relwidth: float
@@ -165,7 +174,8 @@ class InterfaceImageButton(ABC, ctk.CTkButton):
     @abstractmethod
     def __post_init__(self):
         the_image = ctk.CTkImage(light_image = Image.open(self.path), size = (120, 130))
-        ctk.CTkButton.__init__(self, master = self.master,text = "", image = the_image, fg_color = "#860505", hover_color = "red")
+        ctk.CTkButton.__init__(self, master = self.master,text = "", image = the_image,
+                               fg_color = "#860505", hover_color = "red", command = self.command)
         
         self.place(relx = self.relx, rely = self.rely, relwidth = self.relwidth, relheight = self.relheight)
  
@@ -183,8 +193,8 @@ class ImageButton(InterfaceImageButton):
 class InterfaceSlidingFrame(ABC, ctk.CTkFrame):
     """Interface to generate slide frames"""
     master: ctk.CTkFrame
-    start_pos: float
-    end_pos: float
+    start_pos: float = 1.0
+    end_pos: float = 0.7
     
     @abstractmethod
     def __post_init__(self):
@@ -225,13 +235,30 @@ class InterfaceSlidingFrame(ABC, ctk.CTkFrame):
             self.after(10, self.animate_backwards)
          else:
             self.in_start_pos = True
-            
+
+@dataclass
+class Event(InterfaceSlidingFrame):
+    def __post_init__(self):
+        InterfaceSlidingFrame.__post_init__(self)
+        
+    def widgets(self):
+        self.event_font = ctk.CTkFont("Arial", 20, "bold")
+        self.event_label = Label(master = self, text = "", text_color = "#860505", font = self.event_font, 
+                                relx = 0.075, rely = 0.05, relwidth = 0.8, relheight = 0.1)
+    def cancel(self):
+        self.animate()
+    
+    def save(self):
+        self.master.new_panel_frame.animate()
+        self.animate() 
+ 
+          
 ####################
-# FRAMES
+# NAME FRAMES
 ####################
 @dataclass
-class InterfaceFrame(ABC, ctk.CTkFrame):
-    """Interface to generate frames"""
+class InterfaceRegisterNameFrames(ABC, ctk.CTkFrame):
+    """Interface to generate name frames"""
     master: ctk.CTkFrame
     name: str
     office: str
@@ -258,13 +285,48 @@ class InterfaceFrame(ABC, ctk.CTkFrame):
                              relx = 0.05, rely = 0.65, relwidth = 0.6, relheight = 0.2)
 
 @dataclass
-class FrameToRegister(InterfaceFrame):
-    """Class to create concrete image button"""
+class FrameToRegister(InterfaceRegisterNameFrames):
+    """Class to create concrete name frames"""
     def __post_init__(self):
-        InterfaceFrame.__post_init__(self)  
+        InterfaceRegisterNameFrames.__post_init__(self)  
         self.check = Button(master = self, text = "+", relx = 0.88, rely = 0.12,
                             relwidth = 0.08, relheight = 0.25, command = self.register)
         
     def register(self):
         print("registrar")
 
+
+####################
+# EVENT NAME FRAMES
+####################
+@dataclass
+class InterfaceEventNameFrames(ABC, ctk.CTkFrame):
+    """Interface to generate frames"""
+    master: ctk.CTkFrame
+    name: str
+    date: str
+    
+    @abstractmethod
+    def __post_init__(self):
+        ctk.CTkFrame.__init__(self, master = self.master, fg_color = "white", height = 70)
+        self.widgets()
+        
+        self.pack(expand = True, fill = "x", padx = 5, pady = 5)
+        
+    def widgets(self):
+        self.name_font = font = ctk.CTkFont("Arial", 15, "bold")
+        self.date_font = font = ctk.CTkFont("Arial", 15)
+        
+        name = " ".join(self.name.split("_"))
+        self.name_label = Label(master = self, text = name, text_color = "black", font = self.name_font, 
+                             relx = 0.05, rely = 0.2, relwidth = 0.9, relheight = 0.35)
+        
+        date = self.date[:2] + "-" + self.date[2:4] + "-" + self.date[4:]  
+        self.date_label = Label(master = self, text = f"Fecha: {date}", text_color = "#77767b", font = self.date_font, 
+                             relx = 0.05, rely = 0.6, relwidth = 0.6, relheight = 0.2)
+        
+@dataclass
+class EventNameFrames(InterfaceEventNameFrames):
+    """Class to create concrete name frames"""
+    def __post_init__(self):
+        InterfaceEventNameFrames.__post_init__(self)
