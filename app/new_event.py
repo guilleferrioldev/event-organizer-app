@@ -16,9 +16,13 @@ class NewEvent(InterfaceSlidingFrame):
                                 relx = 0.075, rely = 0.05, relwidth = 0.4, relheight = 0.1)
         
         self.name_entry = Entry(master = self, relx = 0.075, rely = 0.14, relwidth = 0.67, relheight = 0.08, placeholder_text = "Nombre del evento")
+        self.name_entry.bind("<Return>", lambda event: self.focus_set())
+        self.name_entry.bind("<KeyRelease>", lambda event: self.change_entry_focus())
+        self.after(10000, lambda: self.focus_set())
         
-        self.date = datetime.now().date().strftime("%d-%m-%Y")
-        self.date_button = Button(master = self, text = f"{self.date}", relx = 0.76, rely = 0.14,
+        self.today  = datetime.now().date().strftime("%d-%m-%Y")
+        self.date = self.today
+        self.date_button = Button(master = self, text = f"{self.today}", relx = 0.76, rely = 0.14,
                                   relwidth = 0.16, relheight = 0.08, command = self.change_date)
         
         self.write_label = Label(master = self, text = "Escribir", text_color = "#860505", font = self.font, 
@@ -41,34 +45,39 @@ class NewEvent(InterfaceSlidingFrame):
         
         self.cancel_button = Button(master = self, text = "Cancelar", relx = 0.4, rely = 0.85,
                                   relwidth = 0.2, relheight = 0.1, command = self.cancel)
-      
+    
     def change_date(self):
+        self.focus_set()
         self.calendar_event_frame = CalendarEvent(self.master).animate()
+        
+    def change_entry_focus(self):
+        self.after(10000, lambda: self.focus_set())
         
     def cancel(self):
         self.name_entry.delete(0, "end")
-        self.date_button.configure(text = f"{datetime.now().date().strftime('%d-%m-%Y')}")
+        self.date = self.today
+        self.date_button.configure(text = f"{self.today}")
         self.animate()
     
     def write_data(self):
+        self.focus_set()
         if self.name_entry.get():
             self.create_database()
             self.write_event = WriteEvent(self.master).animate()
         else:
-            print("no")
+            self.name_entry.configure(placeholder_text = "¡Debe insertar el nombre del evento!", placeholder_text_color = "red")
         
-    
     def import_data_from_excel(self):
+        self.focus_set()
         if self.name_entry.get():
             print("si")
         else:
-            print("no")
+            self.name_entry.configure(placeholder_text = "¡Debe insertar el nombre del evento!", placeholder_text_color = "red")
     
     def recorver_data(self):
-        if self.name_entry.get():
-            self.recorver_event = RecorverEvent(self.master).animate()
-        else:
-            print("no")
+        self.focus_set()
+        self.name_entry.configure(placeholder_text = "Nombre del evento", placeholder_text_color = "grey")
+        self.recorver_event = RecorverEvent(self.master).animate()
     
     def create_database(self):
         conn  = sqlite3.connect("events.db")

@@ -320,10 +320,17 @@ class InterfaceEventNameFrames(ABC, ctk.CTkFrame):
         name = " ".join(self.name.split("_"))
         self.name_label = Label(master = self, text = name, text_color = "black", font = self.name_font, 
                              relx = 0.05, rely = 0.2, relwidth = 0.9, relheight = 0.35)
+        self.name_label.bind("<Button>", lambda event: print(self.name))
         
         date = self.date[:2] + "-" + self.date[2:4] + "-" + self.date[4:]  
         self.date_label = Label(master = self, text = f"Fecha: {date}", text_color = "#77767b", font = self.date_font, 
                              relx = 0.05, rely = 0.6, relwidth = 0.6, relheight = 0.2)
+        self.date_label.bind("<Button>", lambda event: print(self.name))
+    
+        self.bind("<Button>", lambda event: print(self.name))
+        
+        
+        
         
 @dataclass
 class EventNameFrames(InterfaceEventNameFrames):

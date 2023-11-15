@@ -71,8 +71,12 @@ class App(ctk.CTk):
         self.new_panel_frame = NewEvent(self)
         
         self.new_event_button = Button(master = self, text = "Nuevo Evento", relx = 0.85,
-                                       rely = 0.04, relwidth = 0.1, relheight = 0.05, command = self.new_panel_frame.animate)
-         
+                                       rely = 0.04, relwidth = 0.1, relheight = 0.05, command = self.animate_new_panel)
+
+    def animate_new_panel(self):
+        self.new_panel_frame.animate()
+        self.new_panel_frame.name_entry.focus_set()
+    
     def create_database(self):
         """Create the database when the app is initialized for the first time"""
         conn  = sqlite3.connect("events.db")
