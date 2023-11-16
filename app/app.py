@@ -139,12 +139,14 @@ class App(ctk.CTk):
         
     def insert_values_in_menu(self):
         instruction = f"SELECT * FROM {self.database} WHERE Acreditado = 'no'"
-        values = list(set(i[1] for i in self.query(instruction)))
+        values = list(set(i[1] for i in self.query(instruction))) + ["Todos"]
         self.menu_to_register.configure(values = values)
+        self.menu_to_register.set("Todos")
                 
         instruction = f"SELECT * FROM {self.database} WHERE Acreditado = 'yes'"
-        values = list(set(i[1] for i in self.query(instruction)))
+        values = list(set(i[1] for i in self.query(instruction))) + ["Todos"]
         self.menu_already_registered.configure(values = values)
+        self.menu_already_registered.set("Todos")
 
     def clean_and_enable_widget(self):
         self.search_to_register.delete(0, "end")
@@ -173,16 +175,37 @@ class App(ctk.CTk):
             self.reset_registerd_list()
         
         instruction = f"SELECT * FROM {self.database} WHERE Nombre like '%{name}%' AND Acreditado = '{accredited}'"  
+        
+        if accredited == "no" and self.menu_to_register.get() != "Todos":
+            instruction += f" AND Bufete='{self.menu_to_register.get()}'"
+        
+        if accredited == "yes" and self.menu_already_registered.get() != "Todos":
+            instruction += f" AND Bufete='{self.menu_already_registered.get()}'"
+            
         self.execute_instruction(instruction, scrollable = scrollable)
             
     def fitering_by_office_in_list(self, choice):
         self.reset_list()
         instruction = f"SELECT * FROM {self.database} WHERE Bufete='{choice}' AND Acreditado='no'"
+        
+        if choice == "Todos":
+            instruction = f"SELECT * FROM {self.database} WHERE Acreditado='no'"
+            
+        if self.search_to_register.get():
+            instruction += f" AND Nombre like '%{self.search_to_register.get()}%'"
+        
         self.execute_instruction(instruction, scrollable = self.to_register)
         
     def fitering_by_office_in_registered_list(self, choice):
         self.reset_registerd_list()
         instruction = f"SELECT * FROM {self.database} WHERE Bufete='{choice}' AND Acreditado='yes'"
+        
+        if choice == "Todos":
+            instruction = f"SELECT * FROM {self.database} WHERE Acreditado='yes'"
+        
+        if self.search_already_registered.get():
+            instruction += f" AND Nombre like '%{self.search_already_registered.get()}%'"
+        
         self.execute_instruction(instruction, scrollable = self.already_registered)
         
         
