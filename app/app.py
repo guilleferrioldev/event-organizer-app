@@ -19,7 +19,7 @@ class App(ctk.CTk):
         self.widgets()
         
         # Create database 
-        self.create_database()
+        self._create_database()
         
         # Visualize
         self.mainloop()
@@ -79,7 +79,7 @@ class App(ctk.CTk):
         self.new_panel_frame.animate()
         self.new_panel_frame.name_entry.focus_set()
     
-    def create_database(self):
+    def _create_database(self):
         """Create the database when the app is initialized for the first time"""
         conn  = sqlite3.connect("events.db")
         conn.commit()
@@ -103,12 +103,15 @@ class App(ctk.CTk):
         
         for child in self.to_register.winfo_children():
             child.destroy()
+            
+        for child in self.already_registered.winfo_children():
+            child.destroy()
         
         for row in data:
             if row[3] == "no":
-                FrameToRegister(self.to_register, name = row[0], office = row[1], position = row[2])
+                FrameToRegister(self.to_register, name = row[0], office = row[1], position = row[2], accredited = row[3],  database = database)
             else:
-                FrameToRegister(self.already_registered, name = row[0], office = row[1], position = row[2])
+                FrameToRegister(self.already_registered, name = row[0], office = row[1], position = row[2], accredited = row[3], database = database)
         
         values = [row[1] for row in data]
         self.menu_to_register.configure(values = values)

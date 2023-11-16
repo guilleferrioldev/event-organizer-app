@@ -7,6 +7,11 @@ from dataclasses import dataclass
 from interfaces import Scrollable, Button, Event, EventNameFrames, Entry, Label
 from collections import defaultdict
 
+
+####################
+# WRITE FRAME
+####################
+
 @dataclass
 class WriteEvent(Event):
     def __post_init__(self):
@@ -45,8 +50,13 @@ class WriteEvent(Event):
         
     def get_database_name(self):
         return "_".join(self.master.new_panel_frame.name_entry.get().split()) + "".join(self.master.new_panel_frame.date.split("-"))
+    
         
     def jump_to_name_and_save(self):
+        if not (self.name_entry.get() and self.office_entry.get()):
+            self.verification_message(valid = False)
+            return
+         
         name = self.name_entry.get()
         office = self.office_entry.get()
         position = self.position_entry.get()
@@ -68,10 +78,22 @@ class WriteEvent(Event):
         conn.commit()
         conn.close()
         
+        self.clean_entries()
+        self.verification_message(valid = True)
+        self.name_entry.focus_set()
+        
+    def verification_message(self, valid):
+        if not valid:
+            self.name_entry.configure(placeholder_text = "¡Debe insertar el nombre del usuario!", placeholder_text_color = "red")
+            self.office_entry.configure(placeholder_text = "¡Debe insertar si el usuario es de un bufete o invitado!", placeholder_text_color = "red")
+        else:
+            self.name_entry.configure(placeholder_text = "Insertar nombre del usuario", placeholder_text_color = "grey")
+            self.office_entry.configure(placeholder_text = "Bufete/Invitado", placeholder_text_color = "grey")
+    
+    def clean_entries(self):
         self.name_entry.delete(0, "end")
         self.office_entry.delete(0, "end")
         self.position_entry.delete(0, "end")
-        self.name_entry.focus_set()
         
     def cancel(self):
         Event.cancel(self)
@@ -83,13 +105,20 @@ class WriteEvent(Event):
         
         conn.commit()
         conn.close()
+        
+        self.clean_entries()
     
     def save(self):
+        self.clean_entries()
         self.master.current_database_of_accredited(self.get_database_name())
         self.master.recorver_event.refresh()
         self.master.new_panel_frame.cancel()
         self.animate() 
-                  
+ 
+ 
+####################
+# RECORVER FRAME
+####################                 
 @dataclass
 class RecorverEvent(Event):
     def __post_init__(self):
@@ -142,7 +171,7 @@ class RecorverEvent(Event):
             
     def _order_by_date(self):
         hashmap = defaultdict(list)
-        
+    
         names = self._extract_data()
         
         for name in names:
@@ -171,9 +200,13 @@ class RecorverEvent(Event):
     def cancel(self):
         Event.cancel(self)
         self.search.delete(0, "end")
+        self.search.configure(placeholder_text = "Buscar")
         self.refresh()
         
         
+####################
+# CALENDAR FRAME
+####################    
 @dataclass
 class CalendarEvent(Event):
     def __post_init__(self):

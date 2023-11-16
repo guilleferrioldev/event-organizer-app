@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from typing import List, Callable
 from PIL import Image
+import sqlite3
+from enum import Enum, auto
 
 def singleton(cls):
     """Singleton decorator"""
@@ -259,6 +261,8 @@ class InterfaceRegisterNameFrames(ABC, ctk.CTkFrame):
     name: str
     office: str
     position: str
+    accredited: str
+    database: str
     
     @abstractmethod
     def __post_init__(self):
@@ -289,7 +293,17 @@ class FrameToRegister(InterfaceRegisterNameFrames):
                             relwidth = 0.08, relheight = 0.25, command = self.register)
         
     def register(self):
-        print("registrar")
+        conn  = sqlite3.connect("events.db")
+        cursor = conn.cursor()
+        
+        accredited = "yes" if self.accredited == "no" else "no"
+        instruction = f"UPDATE {self.database} SET Acreditado='{accredited}' WHERE Nombre='{self.name}' AND Bufete='{self.office}' AND Cargo='{self.position}'"
+        cursor.execute(instruction)
+
+        conn.commit()
+        conn.close()
+        
+        self.master.master.master.master.current_database_of_accredited(self.database)
 
 
 ####################
