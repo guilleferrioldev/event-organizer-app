@@ -85,6 +85,7 @@ class WriteEvent(Event):
         conn.close()
     
     def save(self):
+        self.master.current_database_of_accredited(self.get_database_name())
         self.master.recorver_event.refresh()
         self.master.new_panel_frame.cancel()
         self.animate() 
