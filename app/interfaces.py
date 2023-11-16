@@ -247,10 +247,6 @@ class Event(InterfaceSlidingFrame):
                                 relx = 0.075, rely = 0.05, relwidth = 0.8, relheight = 0.1)
     def cancel(self):
         self.animate()
-    
-    def save(self):
-        self.master.new_panel_frame.animate()
-        self.animate() 
  
           
 ####################
@@ -303,8 +299,7 @@ class FrameToRegister(InterfaceRegisterNameFrames):
 class InterfaceEventNameFrames(ABC, ctk.CTkFrame):
     """Interface to generate frames"""
     master: ctk.CTkFrame
-    name: str
-    date: str
+    table_name: str
     
     @abstractmethod
     def __post_init__(self):
@@ -317,19 +312,24 @@ class InterfaceEventNameFrames(ABC, ctk.CTkFrame):
         self.name_font = font = ctk.CTkFont("Arial", 15, "bold")
         self.date_font = font = ctk.CTkFont("Arial", 15)
         
-        name = " ".join(self.name.split("_"))
+        name = " ".join(self.table_name[:-8].split("_"))
+        date = self.table_name[-8:][:2] + "-" + self.table_name[-8:][2:4] + "-" + self.table_name[-8:][4:] 
+        
         self.name_label = Label(master = self, text = name, text_color = "black", font = self.name_font, 
                              relx = 0.05, rely = 0.2, relwidth = 0.9, relheight = 0.35)
-        self.name_label.bind("<Button>", lambda event: print(self.name))
+        self.name_label.bind("<Button>", lambda event: self.event())
         
-        date = self.date[:2] + "-" + self.date[2:4] + "-" + self.date[4:]  
         self.date_label = Label(master = self, text = f"Fecha: {date}", text_color = "#77767b", font = self.date_font, 
                              relx = 0.05, rely = 0.6, relwidth = 0.6, relheight = 0.2)
-        self.date_label.bind("<Button>", lambda event: print(self.name))
+        self.date_label.bind("<Button>", lambda event: self.event())
     
-        self.bind("<Button>", lambda event: print(self.name))
-        
-        
+        self.bind("<Button>", lambda event: self.event())
+    
+    def event(self):
+        self.master.master.master.master.master.current_database_of_accredited(self.table_name)
+        self.master.master.master.master.master.animate_new_panel()
+        self.master.master.master.master.master.recorver_event.cancel()
+        self.master.master.master.master.master.event_name.configure(text = f"Evento: {self.table_name[:-8]}")
         
         
 @dataclass

@@ -19,19 +19,22 @@ class WriteEvent(Event):
         self.name_label = Label(master = self, text = "Nombre del usuario", text_color = "black", font = self.font, 
                                 relx = 0.075, rely = 0.17, relwidth = 0.8, relheight = 0.1)
         
-        self.name_entry = Entry(master = self, relx = 0.075, rely = 0.27, relwidth = 0.85, relheight = 0.08, placeholder_text = "Nombre del usuario")
+        self.name_entry = Entry(master = self, relx = 0.075, rely = 0.27, relwidth = 0.85, relheight = 0.08, 
+                                placeholder_text = "Insertar nombre del usuario")
         self.name_entry.bind("<Return>", lambda event: self.office_entry.focus_set())
         
-        self.office_label = Label(master = self, text = "Bufete", text_color = "black", font = self.font, 
+        self.office_label = Label(master = self, text = "Bufete/Invitado", text_color = "black", font = self.font, 
                                 relx = 0.075, rely = 0.37, relwidth = 0.8, relheight = 0.1)
         
-        self.office_entry = Entry(master = self, relx = 0.075, rely = 0.47, relwidth = 0.85, relheight = 0.08, placeholder_text = "Bufete")
+        self.office_entry = Entry(master = self, relx = 0.075, rely = 0.47, relwidth = 0.85, relheight = 0.08,
+                                  placeholder_text = "Insertar Bufete")
         self.office_entry.bind("<Return>", lambda event: self.position_entry.focus_set())
         
         self.position_label = Label(master = self, text = "Cargo", text_color = "black", font = self.font, 
                                 relx = 0.075, rely = 0.57, relwidth = 0.8, relheight = 0.1)
         
-        self.position_entry = Entry(master = self, relx = 0.075, rely = 0.67, relwidth = 0.85, relheight = 0.08, placeholder_text = "Cargo")
+        self.position_entry = Entry(master = self, relx = 0.075, rely = 0.67, relwidth = 0.85, relheight = 0.08, 
+                                    placeholder_text = "Insertar Cargo")
         self.position_entry.bind("<Return>", lambda event: self.jump_to_name_and_save())
         
         self.cancel_button = Button(master = self, text = "Cancelar", relx = 0.2, rely = 0.85,
@@ -40,11 +43,51 @@ class WriteEvent(Event):
         self.save_button = Button(master = self, text = "Abrir", relx = 0.55, rely = 0.85,
                                   relwidth = 0.2, relheight = 0.1, command = self.save)
         
+    def get_database_name(self):
+        return "_".join(self.master.new_panel_frame.name_entry.get().split()) + "".join(self.master.new_panel_frame.date.split("-"))
+        
     def jump_to_name_and_save(self):
+        name = self.name_entry.get()
+        office = self.office_entry.get()
+        position = self.position_entry.get()
+        accredited = "no"
+        
+        conn  = sqlite3.connect("events.db")
+        cursor = conn.cursor()
+        
+        data_insert = f"""INSERT INTO {self.get_database_name()} 
+                        (Nombre,
+                        Bufete,
+                        Cargo,
+                        Acreditado)
+                        VALUES (?,?,?,?)"""
+                            
+        data_insert_tuple = (name, office, position, accredited)
+        
+        cursor.execute(data_insert, data_insert_tuple)
+        conn.commit()
+        conn.close()
+        
         self.name_entry.delete(0, "end")
         self.office_entry.delete(0, "end")
         self.position_entry.delete(0, "end")
         self.name_entry.focus_set()
+        
+    def cancel(self):
+        Event.cancel(self)
+        conn  = sqlite3.connect("events.db")
+        cursor = conn.cursor()
+        
+        instruccion = f"DROP TABLE IF EXISTS {self.get_database_name()};"
+        cursor.execute(instruccion)
+        
+        conn.commit()
+        conn.close()
+    
+    def save(self):
+        self.master.recorver_event.refresh()
+        self.master.new_panel_frame.cancel()
+        self.animate() 
                   
 @dataclass
 class RecorverEvent(Event):
@@ -60,10 +103,9 @@ class RecorverEvent(Event):
         self.recorver_scrollframe = Scrollable(master = self, relx = 0.075, rely = 0.2, relwidth = 0.85, relheight = 0.6)
         
         self.search = Entry(master = self, relx = 0.5, rely = 0.07, relwidth = 0.35, relheight = 0.07, placeholder_text = "Buscar")
-        instruction = f"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name and name like '%{self.search}%'"
         self.search.bind("<KeyRelease>", lambda event: self.searching())
         
-        self.sort_button = Button(master = self, text = "N", relx = 0.86, rely = 0.07,
+        self.sort_button = Button(master = self, text = "F", relx = 0.86, rely = 0.07,
                                   relwidth = 0.07, relheight = 0.07, command = self.sorting)
         
         self.order = True
@@ -82,7 +124,7 @@ class RecorverEvent(Event):
         
     def _insert_frames(self, tables):
         for table in tables:
-            EventNameFrames(self.recorver_scrollframe, name = table[:-8], date = table[-8:])
+            EventNameFrames(self.recorver_scrollframe, table_name = table)
             
     def sorting(self):
         for child in self.recorver_scrollframe.winfo_children():
@@ -90,11 +132,11 @@ class RecorverEvent(Event):
         
         if self.order:
             self.order = False
-            self.sort_button.configure(text = "F")
+            self.sort_button.configure(text = "N")
             self._insert_frames(self._order_by_date())
         else:
             self.order = True
-            self.sort_button.configure(text = "N")
+            self.sort_button.configure(text = "F")
             self._insert_frames(self._extract_data())
             
     def _order_by_date(self):
@@ -113,8 +155,23 @@ class RecorverEvent(Event):
         for child in self.recorver_scrollframe.winfo_children():
             child.destroy()
             
+        if len(self.search.get()) == 0:
+            self.order = False
+            self.sorting()
+            return
+            
         instruction = f"SELECT name FROM sqlite_master WHERE type='table' AND name like '%{self.search.get()}%'"
         self._insert_frames(self._extract_data(instruction))
+    
+    def refresh(self):
+        self.order = False
+        self.sorting()
+        
+    def cancel(self):
+        Event.cancel(self)
+        self.search.delete(0, "end")
+        self.refresh()
+        
         
 @dataclass
 class CalendarEvent(Event):
@@ -139,6 +196,7 @@ class CalendarEvent(Event):
             self.master.new_panel_frame.date_button.configure(text = self.calendar.get_date())
             self.master.new_panel_frame.date = self.calendar.get_date()
             self.animate()
+        
         
         
         

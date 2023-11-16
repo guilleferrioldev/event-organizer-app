@@ -15,10 +15,11 @@ class NewEvent(InterfaceSlidingFrame):
         self.name_label = Label(master = self, text = "Nombre del evento", text_color = "#860505", font = self.font, 
                                 relx = 0.075, rely = 0.05, relwidth = 0.4, relheight = 0.1)
         
-        self.name_entry = Entry(master = self, relx = 0.075, rely = 0.14, relwidth = 0.67, relheight = 0.08, placeholder_text = "Nombre del evento")
+        self.name_entry = Entry(master = self, relx = 0.075, rely = 0.14, relwidth = 0.67, relheight = 0.08, 
+                                placeholder_text = "Insertar nombre del evento")
         self.name_entry.bind("<Return>", lambda event: self.focus_set())
         self.name_entry.bind("<KeyRelease>", lambda event: self.change_entry_focus())
-        self.after(10000, lambda: self.focus_set())
+        self.after(5000, lambda: self.focus_set())
         
         self.today  = datetime.now().date().strftime("%d-%m-%Y")
         self.date = self.today
@@ -48,10 +49,10 @@ class NewEvent(InterfaceSlidingFrame):
     
     def change_date(self):
         self.focus_set()
-        self.calendar_event_frame = CalendarEvent(self.master).animate()
+        self.master.calendar_event_frame.animate()
         
     def change_entry_focus(self):
-        self.after(10000, lambda: self.focus_set())
+        self.after(3000, lambda: self.focus_set())
         
     def cancel(self):
         self.name_entry.delete(0, "end")
@@ -63,7 +64,7 @@ class NewEvent(InterfaceSlidingFrame):
         self.focus_set()
         if self.name_entry.get():
             self.create_database()
-            self.write_event = WriteEvent(self.master).animate()
+            self.master.write_event.animate()
         else:
             self.name_entry.configure(placeholder_text = "¡Debe insertar el nombre del evento!", placeholder_text_color = "red")
         
@@ -76,8 +77,8 @@ class NewEvent(InterfaceSlidingFrame):
     
     def recorver_data(self):
         self.focus_set()
-        self.name_entry.configure(placeholder_text = "Nombre del evento", placeholder_text_color = "grey")
-        self.recorver_event = RecorverEvent(self.master).animate()
+        self.name_entry.configure(placeholder_text = "Insertar nombre del evento", placeholder_text_color = "grey")
+        self.master.recorver_event.animate()
     
     def create_database(self):
         conn  = sqlite3.connect("events.db")
@@ -85,7 +86,7 @@ class NewEvent(InterfaceSlidingFrame):
         
         name = "_".join(self.name_entry.get().split()) + "".join(self.date.split("-"))
         table = f""" CREATE TABLE IF NOT EXISTS {name}
-                    (Nombre y Apellidos TEXT,
+                    (Nombre TEXT,
                     Bufete TEXT,
                     Cargo TEXT,
                     Acreditado Text)

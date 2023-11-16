@@ -4,6 +4,7 @@ from os import path
 from dataclasses import dataclass 
 from new_event import NewEvent
 from interfaces import singleton, Label, Scrollable, Entry, Menu, Button, FrameToRegister
+from events import WriteEvent, RecorverEvent, CalendarEvent
 
 @singleton
 class App(ctk.CTk):
@@ -39,6 +40,7 @@ class App(ctk.CTk):
         # Fonts
         self.small_font = ctk.CTkFont("Arial", 20, "bold")
         self.big_font = ctk.CTkFont("Arial", 30, "bold")
+        self.database = ""
         
         # Visualize the app name
         self.name_app = Label(master = self, text = "GEVENT", text_color = "#860505", font = self.big_font, 
@@ -65,10 +67,10 @@ class App(ctk.CTk):
         
         self.menu_already_registered = Menu(master = self, values = [""], relx = 0.79, rely = 0.17, relwidth = 0.16, relheight = 0.04)
         
-        self.frame = FrameToRegister(self.to_register, name = "Jose antonio alvarez echecherria cuadrado",
-                                     office = "Bufete", position = "Cargo")
-        
         self.new_panel_frame = NewEvent(self)
+        self.recorver_event = RecorverEvent(self)
+        self.calendar_event_frame = CalendarEvent(self)
+        self.write_event = WriteEvent(self)
         
         self.new_event_button = Button(master = self, text = "Nuevo Evento", relx = 0.85,
                                        rely = 0.04, relwidth = 0.1, relheight = 0.05, command = self.animate_new_panel)
@@ -83,4 +85,37 @@ class App(ctk.CTk):
         conn.commit()
         conn.close()
         
-App()
+    def _extract_data(self, name):
+        conn  = sqlite3.connect("events.db")
+        cursor = conn.cursor()
+        
+        instruction = f"SELECT * FROM {name}"
+        cursor.execute(instruction)
+        data = cursor.fetchall()
+
+        conn.commit()
+        conn.close()
+        return data
+
+    def current_database_of_accredited(self, database):
+        self.database = database
+        data = self._extract_data(database)
+        
+        for child in self.to_register.winfo_children():
+            child.destroy()
+        
+        for row in data:
+            if row[3] == "no":
+                FrameToRegister(self.to_register, name = row[0], office = row[1], position = row[2])
+            else:
+                FrameToRegister(self.already_registered, name = row[0], office = row[1], position = row[2])
+        
+        values = [row[1] for row in data]
+        self.menu_to_register.configure(values = values)
+        self.menu_to_register.set(values[0] if values else "")
+        self.menu_already_registered.configure(values = values)
+        self.menu_already_registered.set(values[0] if values else "")
+        
+    
+if __name__ == "__main__":    
+    App()
