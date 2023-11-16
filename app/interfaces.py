@@ -116,18 +116,20 @@ class InterfaceMenu(ABC, ctk.CTkOptionMenu):
     rely: float
     relwidth: float
     relheight: float
+    command: Callable
     state: str = "disabled"
+    
     
     @abstractmethod
     def __post_init__(self):
         ctk.CTkOptionMenu.__init__(self, master = self.master, values = self.values, fg_color = "#860505", button_color = "red", state = self.state, 
-                                   button_hover_color = "#860505", dropdown_hover_color = "red", font = ctk.CTkFont("Arial", 15))
+                                   button_hover_color = "#860505", dropdown_hover_color = "red", font = ctk.CTkFont("Arial", 15), command = self.command)
         
         self.place(relx = self.relx, rely = self.rely, relwidth = self.relwidth, relheight = self.relheight)
 
 
 @dataclass
-class Menu(InterfaceMenu):
+class Menu(InterfaceMenu):    
     """Class to create concrete option menu"""
     def __post_init__(self):
         InterfaceMenu.__post_init__(self)   

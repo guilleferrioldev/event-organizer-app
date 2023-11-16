@@ -66,9 +66,11 @@ class App(ctk.CTk):
                                                placeholder_text = "Buscar", state = "disabled")
         self.search_already_registered.bind("<KeyRelease>", lambda event: self.search_in_the_list("search already registered"))
         
-        self.menu_to_register = Menu(master = self, values = [""], relx = 0.31, rely = 0.17, relwidth = 0.16, relheight = 0.04)
+        self.menu_to_register = Menu(master = self, values = [""], relx = 0.31, rely = 0.17, relwidth = 0.16, 
+                                     relheight = 0.04, command = self.fitering_by_office_in_list)
         
-        self.menu_already_registered = Menu(master = self, values = [""], relx = 0.79, rely = 0.17, relwidth = 0.16, relheight = 0.04)
+        self.menu_already_registered = Menu(master = self, values = [""], relx = 0.79, rely = 0.17, relwidth = 0.16,
+                                            relheight = 0.04, command = self.fitering_by_office_in_registered_list)
         
         self.new_panel_frame = NewEvent(self)
         self.recorver_event = RecorverEvent(self)
@@ -139,13 +141,11 @@ class App(ctk.CTk):
         instruction = f"SELECT * FROM {self.database} WHERE Acreditado = 'no'"
         values = list(set(i[1] for i in self.query(instruction)))
         self.menu_to_register.configure(values = values)
-        self.menu_to_register.set(values[0] if values else "")
                 
         instruction = f"SELECT * FROM {self.database} WHERE Acreditado = 'yes'"
         values = list(set(i[1] for i in self.query(instruction)))
         self.menu_already_registered.configure(values = values)
-        self.menu_already_registered.set(values[0] if values else "")
-    
+
     def clean_and_enable_widget(self):
         self.search_to_register.delete(0, "end")
         self.search_already_registered.delete(0, "end")
@@ -153,7 +153,13 @@ class App(ctk.CTk):
         self.search_already_registered.configure(state = "normal", placeholder_text = "Buscar")
         self.menu_to_register.configure(state = "normal")
         self.menu_already_registered.configure(state = "normal")
+    
+    def execute_instruction(self, instruction, scrollable):
+        data = self.query(instruction)
         
+        for row in data:
+            self.insert_data(data = row, scrollable = scrollable)
+    
     def search_in_the_list(self, scrollable):
         if scrollable == "to register":
             name = self.search_to_register.get()
@@ -165,12 +171,20 @@ class App(ctk.CTk):
             accredited = "yes"
             scrollable = self.already_registered
             self.reset_registerd_list()
-            
-        instruction = f"SELECT * FROM {self.database} WHERE Nombre like '%{name}%' AND Acreditado = '{accredited}'"
-        data = self.query(instruction)
         
-        for row in data:
-            self.insert_data(data = row, scrollable = scrollable)
+        instruction = f"SELECT * FROM {self.database} WHERE Nombre like '%{name}%' AND Acreditado = '{accredited}'"  
+        self.execute_instruction(instruction, scrollable = scrollable)
+            
+    def fitering_by_office_in_list(self, choice):
+        self.reset_list()
+        instruction = f"SELECT * FROM {self.database} WHERE Bufete='{choice}' AND Acreditado='no'"
+        self.execute_instruction(instruction, scrollable = self.to_register)
+        
+    def fitering_by_office_in_registered_list(self, choice):
+        self.reset_registerd_list()
+        instruction = f"SELECT * FROM {self.database} WHERE Bufete='{choice}' AND Acreditado='yes'"
+        self.execute_instruction(instruction, scrollable = self.already_registered)
+        
         
 if __name__ == "__main__":    
     App()
