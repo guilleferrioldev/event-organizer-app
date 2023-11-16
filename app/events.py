@@ -1,7 +1,6 @@
 import customtkinter as ctk 
 from tkcalendar import Calendar
 from datetime import datetime
-from os import path
 import sqlite3
 from dataclasses import dataclass
 from interfaces import Scrollable, Button, Event, EventNameFrames, Entry, Label

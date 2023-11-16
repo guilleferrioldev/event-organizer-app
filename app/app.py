@@ -1,6 +1,5 @@
 import customtkinter as ctk 
 import sqlite3
-from os import path
 from dataclasses import dataclass 
 from new_event import NewEvent
 from interfaces import singleton, Label, Scrollable, Entry, Menu, Button, FrameToRegister
@@ -47,7 +46,7 @@ class App(ctk.CTk):
                              relx = 0.05, rely = 0.01, relwidth = 0.2, relheight = 0.1)
         
         self.event_name = Label(master = self, text = "Evento: ", text_color = "#860505", font = self.small_font, 
-                             relx = 0.05, rely = 0.09, relwidth = 0.2, relheight = 0.03)
+                             relx = 0.05, rely = 0.085, relwidth = 0.2, relheight = 0.05)
         
         self.list_to_register_label = Label(master = self, text = "Listado", text_color = "#77767b", font = self.small_font,
                                             relx = 0.05, rely = 0.13, relwidth = 0.15, relheight = 0.03)
@@ -59,9 +58,13 @@ class App(ctk.CTk):
         
         self.already_registered = Scrollable(master = self, relx = 0.53, rely = 0.23, relwidth = 0.42, relheight = 0.7)
         
-        self.search_to_register = Entry(master = self, relx = 0.05, rely = 0.17, relwidth = 0.25, relheight = 0.04, placeholder_text = "Buscar")
+        self.search_to_register = Entry(master = self, relx = 0.05, rely = 0.17, relwidth = 0.25, relheight = 0.04, 
+                                        placeholder_text = "Buscar", state = "disabled")
+        self.search_to_register.bind("<KeyRelease>", lambda event: self.search_in_the_list("to register"))
         
-        self.search_already_registered = Entry(master = self, relx = 0.53, rely = 0.17, relwidth = 0.25, relheight = 0.04, placeholder_text = "Buscar")
+        self.search_already_registered = Entry(master = self, relx = 0.53, rely = 0.17, relwidth = 0.25, relheight = 0.04,
+                                               placeholder_text = "Buscar", state = "disabled")
+        self.search_already_registered.bind("<KeyRelease>", lambda event: self.search_in_the_list("search already registered"))
         
         self.menu_to_register = Menu(master = self, values = [""], relx = 0.31, rely = 0.17, relwidth = 0.16, relheight = 0.04)
         
@@ -86,39 +89,88 @@ class App(ctk.CTk):
         conn.close()
         
     def _extract_data(self, name):
+        instruction = f"SELECT * FROM {name}"
+        data = self.query(instruction)
+        return data
+    
+    def query(self, instruction):
         conn  = sqlite3.connect("events.db")
         cursor = conn.cursor()
         
-        instruction = f"SELECT * FROM {name}"
         cursor.execute(instruction)
-        data = cursor.fetchall()
-
+        
+        if instruction.startswith("SELECT"):
+            data = cursor.fetchall()
+        else:
+            data = None
+        
         conn.commit()
         conn.close()
         return data
+    
+    def reset_list(self):
+        for child in self.to_register.winfo_children():
+            child.destroy()
+            
+    def reset_registerd_list(self):
+        for child in self.already_registered.winfo_children():
+            child.destroy()
+            
+    def insert_data(self, data, scrollable):
+        FrameToRegister(master = scrollable, name = data[0], office = data[1], position = data[2], accredited = data[3], database = self.database)   
 
     def current_database_of_accredited(self, database):
         self.database = database
         data = self._extract_data(database)
         
-        for child in self.to_register.winfo_children():
-            child.destroy()
-            
-        for child in self.already_registered.winfo_children():
-            child.destroy()
+        self.reset_list()
+        self.reset_registerd_list()
+        self.clean_and_enable_widget()
         
         for row in data:
             if row[3] == "no":
-                FrameToRegister(self.to_register, name = row[0], office = row[1], position = row[2], accredited = row[3],  database = database)
+                self.insert_data(data = row, scrollable = self.to_register)
             else:
-                FrameToRegister(self.already_registered, name = row[0], office = row[1], position = row[2], accredited = row[3], database = database)
+                self.insert_data(data = row, scrollable = self.already_registered)
         
-        values = [row[1] for row in data]
+        self.insert_values_in_menu()
+        
+    def insert_values_in_menu(self):
+        instruction = f"SELECT * FROM {self.database} WHERE Acreditado = 'no'"
+        values = list(set(i[1] for i in self.query(instruction)))
         self.menu_to_register.configure(values = values)
         self.menu_to_register.set(values[0] if values else "")
+                
+        instruction = f"SELECT * FROM {self.database} WHERE Acreditado = 'yes'"
+        values = list(set(i[1] for i in self.query(instruction)))
         self.menu_already_registered.configure(values = values)
         self.menu_already_registered.set(values[0] if values else "")
-        
     
+    def clean_and_enable_widget(self):
+        self.search_to_register.delete(0, "end")
+        self.search_already_registered.delete(0, "end")
+        self.search_to_register.configure(state = "normal", placeholder_text = "Buscar")
+        self.search_already_registered.configure(state = "normal", placeholder_text = "Buscar")
+        self.menu_to_register.configure(state = "normal")
+        self.menu_already_registered.configure(state = "normal")
+        
+    def search_in_the_list(self, scrollable):
+        if scrollable == "to register":
+            name = self.search_to_register.get()
+            accredited = "no"
+            scrollable = self.to_register
+            self.reset_list()
+        else:
+            name = self.search_already_registered.get()
+            accredited = "yes"
+            scrollable = self.already_registered
+            self.reset_registerd_list()
+            
+        instruction = f"SELECT * FROM {self.database} WHERE Nombre like '%{name}%' AND Acreditado = '{accredited}'"
+        data = self.query(instruction)
+        
+        for row in data:
+            self.insert_data(data = row, scrollable = scrollable)
+        
 if __name__ == "__main__":    
     App()

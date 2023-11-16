@@ -87,10 +87,11 @@ class InterfaceEntry(ABC, ctk.CTkEntry):
     relwidth: float
     relheight: float
     placeholder_text : str
+    state : str = "normal"
     
     @abstractmethod
     def __post_init__(self):
-        ctk.CTkEntry.__init__(self, master = self.master, placeholder_text = self.placeholder_text, font = ctk.CTkFont("Arial", 15))
+        ctk.CTkEntry.__init__(self, master = self.master, placeholder_text = self.placeholder_text, font = ctk.CTkFont("Arial", 15), state = self.state)
         
         self.place(relx = self.relx, rely = self.rely, relwidth = self.relwidth, relheight = self.relheight)
 
@@ -115,10 +116,11 @@ class InterfaceMenu(ABC, ctk.CTkOptionMenu):
     rely: float
     relwidth: float
     relheight: float
+    state: str = "disabled"
     
     @abstractmethod
     def __post_init__(self):
-        ctk.CTkOptionMenu.__init__(self, master = self.master, values = self.values, fg_color = "#860505", button_color = "red", 
+        ctk.CTkOptionMenu.__init__(self, master = self.master, values = self.values, fg_color = "#860505", button_color = "red", state = self.state, 
                                    button_hover_color = "#860505", dropdown_hover_color = "red", font = ctk.CTkFont("Arial", 15))
         
         self.place(relx = self.relx, rely = self.rely, relwidth = self.relwidth, relheight = self.relheight)
