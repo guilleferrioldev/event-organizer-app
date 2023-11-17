@@ -18,6 +18,7 @@ class WriteEvent(Event):
         Event.__post_init__(self)
         
     def widgets(self) -> None:
+        """Method to insert all widgets"""
         Event.widgets(self)
         self.event_label.configure(text = "Escribir datos del evento")
         
@@ -49,10 +50,12 @@ class WriteEvent(Event):
                                   relwidth = 0.2, relheight = 0.1, command = self.save)
         
     def get_database_name(self) -> str:
+        """Method to get database name"""
         return "_".join(self.master.new_panel_frame.name_entry.get().split()) + "".join(self.master.new_panel_frame.date.split("-"))
     
         
     def jump_to_name_and_save(self) -> None:
+        """Method to save the data and jump to name_entry"""
         if not (self.name_entry.get() and self.office_entry.get()):
             self.verification_message(valid = False)
             return
@@ -83,6 +86,7 @@ class WriteEvent(Event):
         self.name_entry.focus_set()
         
     def verification_message(self, valid: bool) -> None:
+        """Method to validate if the name was written"""
         if not valid:
             self.name_entry.configure(placeholder_text = "¡Debe insertar el nombre del usuario!", placeholder_text_color = "red")
             self.office_entry.configure(placeholder_text = "¡Debe insertar si el usuario es de un bufete o invitado!", placeholder_text_color = "red")
@@ -91,11 +95,13 @@ class WriteEvent(Event):
             self.office_entry.configure(placeholder_text = "Bufete/Invitado", placeholder_text_color = "grey")
     
     def clean_entries(self) -> None:
+        """Method to clean entries"""
         self.name_entry.delete(0, "end")
         self.office_entry.delete(0, "end")
         self.position_entry.delete(0, "end")
         
     def cancel(self) -> None:
+        """Cancel method"""
         Event.cancel(self)
         conn  = sqlite3.connect("events.db")
         cursor = conn.cursor()
@@ -109,6 +115,7 @@ class WriteEvent(Event):
         self.clean_entries()
     
     def save(self) -> None:
+        """Method to save the data and open it"""
         self.clean_entries()
         self.master.current_database_of_accredited(self.get_database_name())
         self.master.recorver_event.refresh()
@@ -125,6 +132,7 @@ class RecorverEvent(Event):
         Event.__post_init__(self)
         
     def widgets(self) -> None:
+        """Method to insert all widgets"""
         Event.widgets(self)
         self.event_label.configure(text = "Recuperar evento")
         self.cancel_button = Button(master = self, text = "Cancelar", relx = 0.4, rely = 0.85,
@@ -142,6 +150,7 @@ class RecorverEvent(Event):
         self._insert_frames(self._extract_data())
         
     def _extract_data(self, instruction: str = f"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name") -> Iterable:
+        """Method to extract the data from the database"""
         conn = sqlite3.connect("events.db")
         cursor = conn.cursor()
         
@@ -153,10 +162,12 @@ class RecorverEvent(Event):
         return (i[0] for i in data)
         
     def _insert_frames(self, tables: List) -> None:
+        """Method to insert data in scrollable list"""
         for table in tables:
             EventNameFrames(self.recorver_scrollframe, table_name = table)
             
-    def sorting(self):
+    def sorting(self) -> None:
+        """Method to sort data"""
         for child in self.recorver_scrollframe.winfo_children():
             child.destroy()
         
@@ -169,7 +180,8 @@ class RecorverEvent(Event):
             self.sort_button.configure(text = "F")
             self._insert_frames(self._extract_data())
             
-    def _order_by_date(self):
+    def _order_by_date(self) -> List:
+        """Method to sort data according to date"""
         hashmap = defaultdict(list)
     
         names = self._extract_data()
@@ -181,7 +193,8 @@ class RecorverEvent(Event):
     
         return sum({key: result[key] for key in sorted(result)}.values(), start = [])
     
-    def searching(self):
+    def searching(self) -> None:
+        """Method to search when you type in the search entry"""
         for child in self.recorver_scrollframe.winfo_children():
             child.destroy()
             
@@ -193,11 +206,13 @@ class RecorverEvent(Event):
         instruction = f"SELECT name FROM sqlite_master WHERE type='table' AND name like '%{self.search.get()}%'"
         self._insert_frames(self._extract_data(instruction))
     
-    def refresh(self):
+    def refresh(self) -> None:
+        """Method to refresh this frames"""
         self.order = False
         self.sorting()
         
-    def cancel(self):
+    def cancel(self) -> None:
+        """Method to cancel"""
         Event.cancel(self)
         self.search.delete(0, "end")
         self.search.configure(placeholder_text = "Buscar")
@@ -209,10 +224,11 @@ class RecorverEvent(Event):
 ####################    
 @dataclass
 class CalendarEvent(Event):
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         Event.__post_init__(self)    
         
-    def widgets(self):
+    def widgets(self) -> None:
+        """Method to insert all widgets"""
         Event.widgets(self)         
         self.today = datetime.now().date()
 
@@ -225,7 +241,8 @@ class CalendarEvent(Event):
         
         self.calendar.bind("<<CalendarSelected>>", lambda event : self.change_date())
         
-    def change_date(self):
+    def change_date(self) -> None:
+        """Method to change the date"""
         if datetime.strptime(self.calendar.get_date(), '%d-%m-%Y').date() >= self.today:
             self.master.new_panel_frame.date_button.configure(text = self.calendar.get_date())
             self.master.new_panel_frame.date = self.calendar.get_date()
