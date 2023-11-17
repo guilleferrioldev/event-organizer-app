@@ -12,10 +12,11 @@ from events import WriteEvent, RecorverEvent, CalendarEvent
 
 @dataclass
 class NewEvent(InterfaceSlidingFrame):
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         InterfaceSlidingFrame.__post_init__(self)
         
-    def widgets(self):
+    def widgets(self) -> None:
+        """Method to insert all widgets"""
         self.name_label = Label(master = self, text = "Nombre del evento", text_color = "#860505", font = self.font, 
                                 relx = 0.075, rely = 0.05, relwidth = 0.4, relheight = 0.1)
         
@@ -51,20 +52,24 @@ class NewEvent(InterfaceSlidingFrame):
         self.cancel_button = Button(master = self, text = "Cancelar", relx = 0.4, rely = 0.85,
                                   relwidth = 0.2, relheight = 0.1, command = self.cancel)
     
-    def change_date(self):
+    def change_date(self) -> None:
+        """Method to animate the Calendar Event frame"""
         self.focus_set()
         self.master.calendar_event_frame.animate()
         
-    def change_entry_focus(self):
+    def change_entry_focus(self) -> None:
+        """Method to remove focus from name_entry"""
         self.after(3000, lambda: self.focus_set())
         
-    def cancel(self):
+    def cancel(self) -> None:
+        """Cancel method"""
         self.name_entry.delete(0, "end")
         self.date = self.today
         self.date_button.configure(text = f"{self.today}")
         self.animate()
     
-    def write_data(self):
+    def write_data(self) -> None:
+        """Method to animate the Write Event frame"""
         self.focus_set()
         if self.name_entry.get():
             self.create_database()
@@ -72,19 +77,22 @@ class NewEvent(InterfaceSlidingFrame):
         else:
             self.name_entry.configure(placeholder_text = "¡Debe insertar el nombre del evento!", placeholder_text_color = "red")
         
-    def import_data_from_excel(self):
+    def import_data_from_excel(self) -> None:
+        """Method to animate the Excel Event frame"""
         self.focus_set()
         if self.name_entry.get():
             self.import_excel()
         else:
             self.name_entry.configure(placeholder_text = "¡Debe insertar el nombre del evento!", placeholder_text_color = "red")
     
-    def recorver_data(self):
+    def recorver_data(self) -> None:
+        """Method to animate the Recorver Event frame"""
         self.focus_set()
         self.name_entry.configure(placeholder_text = "Insertar nombre del evento", placeholder_text_color = "grey")
         self.master.recorver_event.animate()
     
-    def create_database(self):
+    def create_database(self) -> None:
+        """Method to create a database when excel button or write button are touched"""
         conn  = sqlite3.connect("events.db")
         cursor = conn.cursor()
         
@@ -100,13 +108,15 @@ class NewEvent(InterfaceSlidingFrame):
         conn.commit()
         conn.close()  
         
-    def import_excel(self):
-        filename = filedialog.askopenfilename(title = "Abrir excel", initialdir = ".")
+    def import_excel(self) -> None:
+        """Method to open the excel"""
+        filename = filedialog.askopenfilename(title = "Abrir excel", initialdir = "~")
         if filename:
             path = Path(filename)
-            self.path_to_sql(path)
+            self._path_to_sql(path)
             
-    def path_to_sql(self, path):
+    def _path_to_sql(self, path) -> None:
+        """Method to insert the excel in the database"""
         if not str(path).endswith(".xlsx") or str(path).endswith(".xls"):
             return 
         
@@ -121,9 +131,10 @@ class NewEvent(InterfaceSlidingFrame):
         name_of_table = "_".join(self.name_entry.get().split()) + "".join(self.date.split("-"))
         excel.to_sql(name_of_table, con=engine, if_exists='replace', index=False)
         
-        self.open(name_of_table)
+        self._open(name_of_table)
     
-    def open(self, database):
+    def _open(self, database) -> None:
+        """Method to open the data"""
         self.master.current_database_of_accredited(database)
         self.master.recorver_event.refresh()
         self.cancel()

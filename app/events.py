@@ -128,6 +128,7 @@ class WriteEvent(Event):
 ####################                 
 @dataclass
 class RecorverEvent(Event):
+    """Frame to recorver the data"""
     def __post_init__(self) -> None:
         Event.__post_init__(self)
         
@@ -224,6 +225,7 @@ class RecorverEvent(Event):
 ####################    
 @dataclass
 class CalendarEvent(Event):
+    """Frame to change the date"""
     def __post_init__(self) -> None:
         Event.__post_init__(self)    
         
