@@ -19,7 +19,7 @@ class NewEvent(InterfaceSlidingFrame):
                                 placeholder_text = "Insertar nombre del evento")
         self.name_entry.bind("<Return>", lambda event: self.focus_set())
         self.name_entry.bind("<KeyRelease>", lambda event: self.change_entry_focus())
-        self.after(5000, lambda: self.focus_set())
+        self.after(3000, lambda: self.focus_set())
         
         self.today  = datetime.now().date().strftime("%d-%m-%Y")
         self.date = self.today

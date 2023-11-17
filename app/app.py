@@ -37,6 +37,7 @@ class App(ctk.CTk):
     def widgets(self):
         """Create widgets to interact with the app"""
         # Fonts
+        self.very_small_font = ctk.CTkFont("Arial", 15)
         self.small_font = ctk.CTkFont("Arial", 20, "bold")
         self.big_font = ctk.CTkFont("Arial", 30, "bold")
         self.database = ""
@@ -48,8 +49,14 @@ class App(ctk.CTk):
         self.event_name = Label(master = self, text = "Evento: ", text_color = "#860505", font = self.small_font, 
                              relx = 0.05, rely = 0.085, relwidth = 0.2, relheight = 0.05)
         
+        self.count_list = Label(master = self, text = "Cantidad:   0", text_color = "#77767b", font = self.very_small_font,
+                                relx = 0.385, rely = 0.13, relwidth = 0.15, relheight = 0.03)
+        
         self.list_to_register_label = Label(master = self, text = "Listado", text_color = "#77767b", font = self.small_font,
                                             relx = 0.05, rely = 0.13, relwidth = 0.15, relheight = 0.03)
+        
+        self.count_registered_list = Label(master = self, text = "Cantidad:   0", text_color = "#77767b", font = self.very_small_font,
+                                            relx = 0.87, rely = 0.13, relwidth = 0.15, relheight = 0.03)
         
         self.list_already_register_label = Label(master = self, text = "Acreditados", text_color = "#77767b", font = self.small_font,
                                                 relx = 0.53, rely = 0.13, relwidth = 0.15, relheight = 0.03)
@@ -136,7 +143,16 @@ class App(ctk.CTk):
                 self.insert_data(data = row, scrollable = self.already_registered)
         
         self.insert_values_in_menu()
+        self.counter()
         
+    def clean_and_enable_widget(self):
+        self.search_to_register.delete(0, "end")
+        self.search_already_registered.delete(0, "end")
+        self.search_to_register.configure(state = "normal", placeholder_text = "Buscar")
+        self.search_already_registered.configure(state = "normal", placeholder_text = "Buscar")
+        self.menu_to_register.configure(state = "normal")
+        self.menu_already_registered.configure(state = "normal")
+            
     def insert_values_in_menu(self):
         instruction = f"SELECT * FROM {self.database} WHERE Acreditado = 'no'"
         values = list(set(i[1] for i in self.query(instruction))) + ["Todos"]
@@ -148,19 +164,17 @@ class App(ctk.CTk):
         self.menu_already_registered.configure(values = values)
         self.menu_already_registered.set("Todos")
 
-    def clean_and_enable_widget(self):
-        self.search_to_register.delete(0, "end")
-        self.search_already_registered.delete(0, "end")
-        self.search_to_register.configure(state = "normal", placeholder_text = "Buscar")
-        self.search_already_registered.configure(state = "normal", placeholder_text = "Buscar")
-        self.menu_to_register.configure(state = "normal")
-        self.menu_already_registered.configure(state = "normal")
-    
+    def counter(self):
+        self.count_list.configure(text = f"Cantidad: {len([i for i in self.to_register.winfo_children()])}")
+        self.count_registered_list.configure(text = f"Cantidad: {len([i for i in self.already_registered.winfo_children()])}")
+           
     def execute_instruction(self, instruction, scrollable):
         data = self.query(instruction)
         
         for row in data:
             self.insert_data(data = row, scrollable = scrollable)
+            
+        self.counter()
     
     def search_in_the_list(self, scrollable):
         if scrollable == "to register":
