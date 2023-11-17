@@ -1,6 +1,10 @@
 import customtkinter as ctk 
 from datetime import datetime
 from os import path
+from pathlib import Path
+from tkinter import filedialog
+import pandas as pd
+from sqlalchemy import create_engine
 import sqlite3
 from dataclasses import dataclass
 from interfaces import Label, Entry, InterfaceSlidingFrame, ImageButton, Button
@@ -71,7 +75,7 @@ class NewEvent(InterfaceSlidingFrame):
     def import_data_from_excel(self):
         self.focus_set()
         if self.name_entry.get():
-            print("si")
+            self.import_excel()
         else:
             self.name_entry.configure(placeholder_text = "¡Debe insertar el nombre del evento!", placeholder_text_color = "red")
     
@@ -94,7 +98,27 @@ class NewEvent(InterfaceSlidingFrame):
         cursor.execute(table)
 
         conn.commit()
-        conn.close()
+        conn.close()  
         
-
+    def import_excel(self):
+        filename = filedialog.askopenfilename(title = "Abrir excel", initialdir = ".")
+        if filename:
+            path = Path(filename)
+            self.path_to_sql(path)
+            
+    def path_to_sql(self, path):
+        if not str(path).endswith(".xlsx") or str(path).endswith(".xls"):
+            return 
+        
+        excel = pd.read_excel(path)
+        if excel.shape[1] > 3:
+            return
+        
+        excel.columns = ["Nombre", "Bufete", "Cargo"]
+        excel["Acreditado"] = ["no" for i in range(excel.shape[0])]
+        
+        engine = create_engine('sqlite:///events.db')
+        name_of_table = "_".join(self.name_entry.get().split()) + "".join(self.date.split("-"))
+        excel.to_sql(name_of_table, con=engine, if_exists='replace', index=False)
+      
         

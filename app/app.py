@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from new_event import NewEvent
 from interfaces import singleton, Label, Scrollable, Entry, Menu, Button, FrameToRegister
 from events import WriteEvent, RecorverEvent, CalendarEvent
+import pickle
 
 @singleton
 class App(ctk.CTk):
@@ -221,7 +222,6 @@ class App(ctk.CTk):
             instruction += f" AND Nombre like '%{self.search_already_registered.get()}%'"
         
         self.execute_instruction(instruction, scrollable = self.already_registered)
-        
-        
-if __name__ == "__main__":    
+
+if __name__ == "__main__": 
     App()

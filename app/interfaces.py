@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from typing import List, Callable
 from PIL import Image
 import sqlite3
-from enum import Enum, auto
 
 def singleton(cls):
     """Singleton decorator"""
@@ -345,7 +344,7 @@ class InterfaceEventNameFrames(ABC, ctk.CTkFrame):
     
     def event(self):
         self.master.master.master.master.master.current_database_of_accredited(self.table_name)
-        self.master.master.master.master.master.animate_new_panel()
+        self.master.master.master.master.master.new_panel_frame.cancel()
         self.master.master.master.master.master.recorver_event.cancel()
         self.master.master.master.master.master.event_name.configure(text = f"Evento: {self.table_name[:-8]}")
         
