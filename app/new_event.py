@@ -120,5 +120,12 @@ class NewEvent(InterfaceSlidingFrame):
         engine = create_engine('sqlite:///events.db')
         name_of_table = "_".join(self.name_entry.get().split()) + "".join(self.date.split("-"))
         excel.to_sql(name_of_table, con=engine, if_exists='replace', index=False)
+        
+        self.open(name_of_table)
+    
+    def open(self, database):
+        self.master.current_database_of_accredited(database)
+        self.master.recorver_event.refresh()
+        self.cancel()
       
         
