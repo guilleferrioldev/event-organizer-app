@@ -5,11 +5,12 @@ from new_event import NewEvent
 from interfaces import singleton, Label, Scrollable, Entry, Menu, Button, FrameToRegister
 from events import WriteEvent, RecorverEvent, CalendarEvent
 import pickle
+from typing import List
 
 @singleton
 class App(ctk.CTk):
     """Created app"""
-    def __init__(self):
+    def __init__(self) -> None:
         ctk.CTk.__init__(self)
         
         # Create application layout
@@ -24,7 +25,7 @@ class App(ctk.CTk):
         # Visualize
         self.mainloop()
         
-    def layout(self):
+    def layout(self) -> None:
         """Custom the app"""
         ctk.set_appearance_mode("light")
         self.title("GEVENT")
@@ -35,7 +36,7 @@ class App(ctk.CTk):
         self.maxsize(self.winfo_screenwidth(), self.winfo_screenheight())
         self.resizable(False, False)
 
-    def widgets(self):
+    def widgets(self) -> None:
         """Create widgets to interact with the app"""
         # Fonts
         self.very_small_font = ctk.CTkFont("Arial", 15)
@@ -88,22 +89,25 @@ class App(ctk.CTk):
         self.new_event_button = Button(master = self, text = "Nuevo Evento", relx = 0.85,
                                        rely = 0.04, relwidth = 0.1, relheight = 0.05, command = self.animate_new_panel)
 
-    def animate_new_panel(self):
+    def animate_new_panel(self) -> None:
+        """Method to animate the new panel"""
         self.new_panel_frame.animate()
         self.new_panel_frame.name_entry.focus_set()
     
-    def _create_database(self):
+    def _create_database(self) -> None:
         """Create the database when the app is initialized for the first time"""
         conn  = sqlite3.connect("events.db")
         conn.commit()
         conn.close()
         
-    def _extract_data(self, name):
+    def _extract_data(self, name: str) -> List:
+        """Method to extract the data from the database"""
         instruction = f"SELECT * FROM {name}"
         data = self.query(instruction)
         return data
     
-    def query(self, instruction):
+    def query(self, instruction: str) -> List:
+        """Method to make queries with sqlite3"""
         conn  = sqlite3.connect("events.db")
         cursor = conn.cursor()
         
@@ -113,29 +117,33 @@ class App(ctk.CTk):
             data = cursor.fetchall()
         else:
             data = None
-        
+            
         conn.commit()
         conn.close()
         return data
     
-    def reset_list(self):
+    def reset_list(self) -> None:
+        """Method to delete all elements from the list"""
         for child in self.to_register.winfo_children():
             child.destroy()
             
-    def reset_registerd_list(self):
+    def reset_registerd_list(self) -> None:
+        """Method to delete all elements from already registered list"""
         for child in self.already_registered.winfo_children():
             child.destroy()
             
-    def insert_data(self, data, scrollable):
+    def insert_data(self, data: List, scrollable: Scrollable) -> None:
+        """Method to insert frames in both scrollables list"""
         FrameToRegister(master = scrollable, name = data[0], office = data[1], position = data[2], accredited = data[3], database = self.database)   
 
-    def current_database_of_accredited(self, database):
+    def current_database_of_accredited(self, database: str) -> None:
+        """Method to extract data and change the current database"""
         self.database = database
         data = self._extract_data(database)
         
         self.reset_list()
         self.reset_registerd_list()
-        self.clean_and_enable_widget()
+        self.clean_and_enable_widgets()
         
         for row in data:
             if row[3] == "no":
@@ -146,7 +154,8 @@ class App(ctk.CTk):
         self.insert_values_in_menu()
         self.counter()
         
-    def clean_and_enable_widget(self):
+    def clean_and_enable_widgets(self) -> None:
+        """Method to clean and enable widgets"""
         self.search_to_register.delete(0, "end")
         self.search_already_registered.delete(0, "end")
         self.search_to_register.configure(state = "normal", placeholder_text = "Buscar")
@@ -154,7 +163,8 @@ class App(ctk.CTk):
         self.menu_to_register.configure(state = "normal")
         self.menu_already_registered.configure(state = "normal")
             
-    def insert_values_in_menu(self):
+    def insert_values_in_menu(self) -> None:
+        """Method to insert the values in both menus"""
         instruction = f"SELECT * FROM {self.database} WHERE Acreditado = 'no'"
         values = list(set(i[1] for i in self.query(instruction))) + ["Todos"]
         self.menu_to_register.configure(values = values)
@@ -165,11 +175,13 @@ class App(ctk.CTk):
         self.menu_already_registered.configure(values = values)
         self.menu_already_registered.set("Todos")
 
-    def counter(self):
+    def counter(self) -> None:
+        """Method to change the state of both counter labels and display the result"""
         self.count_list.configure(text = f"Cantidad: {len([i for i in self.to_register.winfo_children()])}")
         self.count_registered_list.configure(text = f"Cantidad: {len([i for i in self.already_registered.winfo_children()])}")
            
-    def execute_instruction(self, instruction, scrollable):
+    def execute_instruction(self, instruction: str, scrollable: Scrollable) -> None:
+        """Method to excecute instructions, make queries and insert data"""
         data = self.query(instruction)
         
         for row in data:
@@ -177,7 +189,8 @@ class App(ctk.CTk):
             
         self.counter()
     
-    def search_in_the_list(self, scrollable):
+    def search_in_the_list(self, scrollable: Scrollable) -> str:
+        """Method to search and filter data in both scrollable lists"""
         if scrollable == "to register":
             name = self.search_to_register.get()
             accredited = "no"
@@ -199,7 +212,8 @@ class App(ctk.CTk):
             
         self.execute_instruction(instruction, scrollable = scrollable)
             
-    def fitering_by_office_in_list(self, choice):
+    def fitering_by_office_in_list(self, choice: str) -> None:
+        """Method to filter data in the list when the menu is touched"""
         self.reset_list()
         instruction = f"SELECT * FROM {self.database} WHERE Bufete='{choice}' AND Acreditado='no'"
         
@@ -211,7 +225,8 @@ class App(ctk.CTk):
         
         self.execute_instruction(instruction, scrollable = self.to_register)
         
-    def fitering_by_office_in_registered_list(self, choice):
+    def fitering_by_office_in_registered_list(self, choice: str) -> None:
+        """Method to filter data in the already registered list when the menu is touched"""
         self.reset_registerd_list()
         instruction = f"SELECT * FROM {self.database} WHERE Bufete='{choice}' AND Acreditado='yes'"
         

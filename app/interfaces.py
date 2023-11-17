@@ -31,7 +31,7 @@ class InterfaceLabel(ABC, ctk.CTkLabel):
     relheight: float
     
     @abstractmethod
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         ctk.CTkLabel.__init__(self,
                             master = self.master,
                             text = self.text,
@@ -44,7 +44,7 @@ class InterfaceLabel(ABC, ctk.CTkLabel):
 @dataclass
 class Label(InterfaceLabel):
     """Class to create concrete labels"""
-    def __post_init__(self):
+    def __post_init__(self) ->  None:
         InterfaceLabel.__post_init__(self)   
      
      
@@ -62,15 +62,15 @@ class InterfaceScrollableFrame(ABC, ctk.CTkScrollableFrame):
     relheight: float
     
     @abstractmethod
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         ctk.CTkScrollableFrame.__init__(self, master = self.master)
         
         self.place(relx = self.relx, rely = self.rely, relwidth = self.relwidth, relheight = self.relheight)
         
 @dataclass
 class Scrollable(InterfaceScrollableFrame):
-    """Class to create concrete scrollable frames"""
-    def __post_init__(self):
+    """Class to create concrete scrollable frame"""
+    def __post_init__(self) -> None:
         InterfaceScrollableFrame.__post_init__(self)   
 
 
@@ -89,7 +89,7 @@ class InterfaceEntry(ABC, ctk.CTkEntry):
     state : str = "normal"
     
     @abstractmethod
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         ctk.CTkEntry.__init__(self, master = self.master, placeholder_text = self.placeholder_text, font = ctk.CTkFont("Arial", 15), state = self.state)
         
         self.place(relx = self.relx, rely = self.rely, relwidth = self.relwidth, relheight = self.relheight)
@@ -98,7 +98,7 @@ class InterfaceEntry(ABC, ctk.CTkEntry):
 @dataclass
 class Entry(InterfaceEntry):
     """Class to create concrete entry"""
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         InterfaceEntry.__post_init__(self)   
         
 
@@ -120,7 +120,7 @@ class InterfaceMenu(ABC, ctk.CTkOptionMenu):
     
     
     @abstractmethod
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         ctk.CTkOptionMenu.__init__(self, master = self.master, values = self.values, fg_color = "#860505", button_color = "red", state = self.state, 
                                    button_hover_color = "#860505", dropdown_hover_color = "red", font = ctk.CTkFont("Arial", 15), command = self.command)
         
@@ -130,7 +130,7 @@ class InterfaceMenu(ABC, ctk.CTkOptionMenu):
 @dataclass
 class Menu(InterfaceMenu):    
     """Class to create concrete option menu"""
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         InterfaceMenu.__post_init__(self)   
         
         
@@ -149,7 +149,7 @@ class InterfaceButton(ABC, ctk.CTkButton):
     relheight: float
     
     @abstractmethod
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         ctk.CTkButton.__init__(self, master = self.master, text = self.text, font = ctk.CTkFont("Arial", 12),
                                fg_color= "#860505", hover_color = "red", command = self.command)
         
@@ -158,7 +158,7 @@ class InterfaceButton(ABC, ctk.CTkButton):
 @dataclass
 class Button(InterfaceButton):
     """Class to create concrete button"""
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         InterfaceButton.__post_init__(self)   
         
   
@@ -177,7 +177,7 @@ class InterfaceImageButton(ABC, ctk.CTkButton):
     relheight: float
     
     @abstractmethod
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         the_image = ctk.CTkImage(light_image = Image.open(self.path), size = (120, 130))
         ctk.CTkButton.__init__(self, master = self.master,text = "", image = the_image,
                                fg_color = "#860505", hover_color = "red", command = self.command)
@@ -187,7 +187,7 @@ class InterfaceImageButton(ABC, ctk.CTkButton):
 @dataclass
 class ImageButton(InterfaceImageButton):
     """Class to create concrete image button"""
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         InterfaceImageButton.__post_init__(self)   
         
            
@@ -196,13 +196,13 @@ class ImageButton(InterfaceImageButton):
 ####################       
 @dataclass
 class InterfaceSlidingFrame(ABC, ctk.CTkFrame):
-    """Interface to generate slide frames"""
+    """Interface to generate sliding frames"""
     master: ctk.CTkFrame
     start_pos: float = 1.0
     end_pos: float = 0.7
     
     @abstractmethod
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         ctk.CTkFrame.__init__(self, master = self.master, fg_color = "#77767b")
         
         # animation logic
@@ -214,10 +214,10 @@ class InterfaceSlidingFrame(ABC, ctk.CTkFrame):
         self.place(relx = self.start_pos, rely = 0.25)
         
     @abstractmethod
-    def widgets(self):
+    def widgets(self) -> None:
         pass
         
-    def animate(self):
+    def animate(self) -> None:
         if self.in_start_pos:
             self.animate_fordward()
             self.tkraise()
@@ -225,7 +225,7 @@ class InterfaceSlidingFrame(ABC, ctk.CTkFrame):
             self.animate_backwards()
             self.tkraise()
 
-    def animate_fordward(self):
+    def animate_fordward(self) -> None:
         if self.pos > self.end_pos:
             self.pos -= 0.7 
             self.place(relx = 0.25, rely = 0.25, relwidth = 0.45, relheight = 0.5)
@@ -233,7 +233,7 @@ class InterfaceSlidingFrame(ABC, ctk.CTkFrame):
         else:
             self.in_start_pos = False 
 
-    def animate_backwards(self):
+    def animate_backwards(self) -> None:
          if self.pos < self.start_pos:
             self.pos += 0.7 
             self.place(relx = self.pos, rely = 0.25)
@@ -243,14 +243,15 @@ class InterfaceSlidingFrame(ABC, ctk.CTkFrame):
 
 @dataclass
 class Event(InterfaceSlidingFrame):
-    def __post_init__(self):
+    """Class to create concrete sliding frames"""
+    def __post_init__(self) -> None:
         InterfaceSlidingFrame.__post_init__(self)
         
-    def widgets(self):
+    def widgets(self) -> None:
         self.event_font = ctk.CTkFont("Arial", 20, "bold")
         self.event_label = Label(master = self, text = "", text_color = "#860505", font = self.event_font, 
                                 relx = 0.075, rely = 0.05, relwidth = 0.8, relheight = 0.1)
-    def cancel(self):
+    def cancel(self) -> None:
         self.animate()
  
           
@@ -259,7 +260,7 @@ class Event(InterfaceSlidingFrame):
 ####################
 @dataclass
 class InterfaceRegisterNameFrames(ABC, ctk.CTkFrame):
-    """Interface to generate name frames"""
+    """Interface to generate name frames for scrollable lists in the main window"""
     master: ctk.CTkFrame
     name: str
     office: str
@@ -268,13 +269,13 @@ class InterfaceRegisterNameFrames(ABC, ctk.CTkFrame):
     database: str
     
     @abstractmethod
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         ctk.CTkFrame.__init__(self, master = self.master, fg_color = "white", height = 100)
         self.widgets()
         
         self.pack(expand = True, fill = "x", padx = 5, pady = 5)
     
-    def widgets(self):
+    def widgets(self) -> None:
         self.name_font = font = ctk.CTkFont("Arial", 15, "bold")
         self.other_font = font = ctk.CTkFont("Arial", 15)
         
@@ -289,13 +290,13 @@ class InterfaceRegisterNameFrames(ABC, ctk.CTkFrame):
 
 @dataclass
 class FrameToRegister(InterfaceRegisterNameFrames):
-    """Class to create concrete name frames"""
-    def __post_init__(self):
+    """Class to create concrete name frames for scrollable lists in the main window"""
+    def __post_init__(self) -> None:
         InterfaceRegisterNameFrames.__post_init__(self)  
         self.check = Button(master = self, text = "+", relx = 0.88, rely = 0.12,
                             relwidth = 0.08, relheight = 0.25, command = self.register)
         
-    def register(self):
+    def register(self) -> None:
         conn  = sqlite3.connect("events.db")
         cursor = conn.cursor()
         
@@ -314,18 +315,18 @@ class FrameToRegister(InterfaceRegisterNameFrames):
 ####################
 @dataclass
 class InterfaceEventNameFrames(ABC, ctk.CTkFrame):
-    """Interface to generate frames"""
+    """Interface to generate event name frames for Recorver Frame"""
     master: ctk.CTkFrame
     table_name: str
     
     @abstractmethod
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         ctk.CTkFrame.__init__(self, master = self.master, fg_color = "white", height = 70)
         self.widgets()
         
         self.pack(expand = True, fill = "x", padx = 5, pady = 5)
         
-    def widgets(self):
+    def widgets(self) -> None:
         self.name_font = font = ctk.CTkFont("Arial", 15, "bold")
         self.date_font = font = ctk.CTkFont("Arial", 15)
         
@@ -342,7 +343,7 @@ class InterfaceEventNameFrames(ABC, ctk.CTkFrame):
     
         self.bind("<Button>", lambda event: self.event())
     
-    def event(self):
+    def event(self) -> None:
         self.master.master.master.master.master.current_database_of_accredited(self.table_name)
         self.master.master.master.master.master.new_panel_frame.cancel()
         self.master.master.master.master.master.recorver_event.cancel()
@@ -351,6 +352,6 @@ class InterfaceEventNameFrames(ABC, ctk.CTkFrame):
         
 @dataclass
 class EventNameFrames(InterfaceEventNameFrames):
-    """Class to create concrete name frames"""
-    def __post_init__(self):
+    """Class to create concrete event name frames for Recorver Frame"""
+    def __post_init__(self) -> None:
         InterfaceEventNameFrames.__post_init__(self)
