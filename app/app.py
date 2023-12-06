@@ -3,8 +3,10 @@ import sqlite3
 from dataclasses import dataclass 
 from new_event import NewEvent
 from interfaces import singleton, Label, Scrollable, Entry, Menu, Button, FrameToRegister
-from events import WriteEvent, RecorverEvent, CalendarEvent
+from events import WriteEvent, RecorverEvent, CalendarEvent, Confirmation
 import pickle
+import os
+import pandas as pd
 from typing import List
 
 @singleton
@@ -85,10 +87,14 @@ class App(ctk.CTk):
         self.recorver_event = RecorverEvent(self)
         self.calendar_event_frame = CalendarEvent(self)
         self.write_event = WriteEvent(self)
+        self.confirmation = Confirmation(self)
         
         self.new_event_button = Button(master = self, text = "Nuevo Evento", relx = 0.85,
                                        rely = 0.04, relwidth = 0.1, relheight = 0.05, command = self.animate_new_panel)
-
+        
+        self.extract_button = Button(master = self, text = "Extraer", relx = 0.74, state = "disabled",
+                                       rely = 0.04, relwidth = 0.1, relheight = 0.05, command = self.extract_data_to_excel)
+        
     def animate_new_panel(self) -> None:
         """Method to animate the new panel"""
         self.new_panel_frame.animate()
@@ -134,7 +140,7 @@ class App(ctk.CTk):
             
     def insert_data(self, data: List, scrollable: Scrollable) -> None:
         """Method to insert frames in both scrollables list"""
-        FrameToRegister(master = scrollable, name = data[0], office = data[1], position = data[2], accredited = data[3], database = self.database)   
+        FrameToRegister(master = scrollable, name = data[0], office = data[1], accredited = data[2], database = self.database)   
 
     def current_database_of_accredited(self, database: str) -> None:
         """Method to extract data and change the current database"""
@@ -146,7 +152,7 @@ class App(ctk.CTk):
         self.clean_and_enable_widgets()
         
         for row in data:
-            if row[3] == "no":
+            if row[2] == "no":
                 self.insert_data(data = row, scrollable = self.to_register)
             else:
                 self.insert_data(data = row, scrollable = self.already_registered)
@@ -237,6 +243,13 @@ class App(ctk.CTk):
             instruction += f" AND Nombre like '%{self.search_already_registered.get()}%'"
         
         self.execute_instruction(instruction, scrollable = self.already_registered)
-
+        
+    def extract_data_to_excel(self):
+        data = pd.DataFrame(self._extract_data(self.database))
+        data.columns = ["Nombre y Apellidos", "Bufete/Categoría", "Acreditado"] 
+        path = os.path.expanduser('~/Documents')
+        data.to_excel(f"{os.path.join(path, self.database[:-8])}.xlsx", index=False)
+        self.confirmation.animate()
+        
 if __name__ == "__main__": 
     App()

@@ -147,11 +147,12 @@ class InterfaceButton(ABC, ctk.CTkButton):
     rely: float
     relwidth: float
     relheight: float
+    state: str = "normal"
     
     @abstractmethod
     def __post_init__(self) -> None:
         ctk.CTkButton.__init__(self, master = self.master, text = self.text, font = ctk.CTkFont("Arial", 12),
-                               fg_color= "#860505", hover_color = "red", command = self.command)
+                               fg_color= "#860505", hover_color = "red", command = self.command, state = self.state)
         
         self.place(relx = self.relx, rely = self.rely, relwidth = self.relwidth, relheight = self.relheight)
         
@@ -251,6 +252,7 @@ class Event(InterfaceSlidingFrame):
         self.event_font = ctk.CTkFont("Arial", 20, "bold")
         self.event_label = Label(master = self, text = "", text_color = "#860505", font = self.event_font, 
                                 relx = 0.075, rely = 0.05, relwidth = 0.8, relheight = 0.1)
+    
     def cancel(self) -> None:
         self.animate()
  
@@ -264,7 +266,6 @@ class InterfaceRegisterNameFrames(ABC, ctk.CTkFrame):
     master: ctk.CTkFrame
     name: str
     office: str
-    position: str
     accredited: str
     database: str
     
@@ -276,17 +277,14 @@ class InterfaceRegisterNameFrames(ABC, ctk.CTkFrame):
         self.pack(expand = True, fill = "x", padx = 5, pady = 5)
     
     def widgets(self) -> None:
-        self.name_font = font = ctk.CTkFont("Arial", 15, "bold")
+        self.name_font = font = ctk.CTkFont("Arial", 20, "bold")
         self.other_font = font = ctk.CTkFont("Arial", 15)
         
         self.name_label = Label(master = self, text = self.name, text_color = "#860505", font = self.name_font, 
-                             relx = 0.05, rely = 0.2, relwidth = 0.8, relheight = 0.2)
+                             relx = 0.05, rely = 0.2, relwidth = 0.8, relheight = 0.3)
         
         self.office_label = Label(master = self, text = f"Bufete: {self.office}", text_color = "#77767b", font = self.other_font, 
-                             relx = 0.05, rely = 0.45, relwidth = 0.6, relheight = 0.2)
-        
-        self.position_label = Label(master = self, text = f"Cargo: {self.position}", text_color = "#77767b", font = self.other_font, 
-                             relx = 0.05, rely = 0.65, relwidth = 0.6, relheight = 0.2)
+                             relx = 0.05, rely = 0.6, relwidth = 0.6, relheight = 0.2)
 
 @dataclass
 class FrameToRegister(InterfaceRegisterNameFrames):
@@ -301,7 +299,7 @@ class FrameToRegister(InterfaceRegisterNameFrames):
         cursor = conn.cursor()
         
         accredited = "yes" if self.accredited == "no" else "no"
-        instruction = f"UPDATE {self.database} SET Acreditado='{accredited}' WHERE Nombre='{self.name}' AND Bufete='{self.office}' AND Cargo='{self.position}'"
+        instruction = f"UPDATE {self.database} SET Acreditado='{accredited}' WHERE Nombre='{self.name}' AND Bufete='{self.office}'"
         cursor.execute(instruction)
 
         conn.commit()
@@ -347,7 +345,7 @@ class InterfaceEventNameFrames(ABC, ctk.CTkFrame):
         self.master.master.master.master.master.current_database_of_accredited(self.table_name)
         self.master.master.master.master.master.new_panel_frame.cancel()
         self.master.master.master.master.master.recorver_event.cancel()
-        self.master.master.master.master.master.event_name.configure(text = f"Evento: {self.table_name[:-8]}")
+        self.master.master.master.master.master.event_name.configure(text = f"Evento: {' '.join(self.table_name[:-8].split('_'))}")
         
         
 @dataclass

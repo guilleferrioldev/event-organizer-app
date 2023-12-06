@@ -23,25 +23,18 @@ class WriteEvent(Event):
         self.event_label.configure(text = "Escribir datos del evento")
         
         self.name_label = Label(master = self, text = "Nombre del usuario", text_color = "black", font = self.font, 
-                                relx = 0.075, rely = 0.17, relwidth = 0.8, relheight = 0.1)
+                                relx = 0.075, rely = 0.27, relwidth = 0.8, relheight = 0.1)
         
-        self.name_entry = Entry(master = self, relx = 0.075, rely = 0.27, relwidth = 0.85, relheight = 0.08, 
+        self.name_entry = Entry(master = self, relx = 0.075, rely = 0.37, relwidth = 0.85, relheight = 0.08, 
                                 placeholder_text = "Insertar nombre del usuario")
         self.name_entry.bind("<Return>", lambda event: self.office_entry.focus_set())
         
         self.office_label = Label(master = self, text = "Bufete/Invitado", text_color = "black", font = self.font, 
-                                relx = 0.075, rely = 0.37, relwidth = 0.8, relheight = 0.1)
+                                relx = 0.075, rely = 0.5, relwidth = 0.8, relheight = 0.1)
         
-        self.office_entry = Entry(master = self, relx = 0.075, rely = 0.47, relwidth = 0.85, relheight = 0.08,
+        self.office_entry = Entry(master = self, relx = 0.075, rely = 0.6, relwidth = 0.85, relheight = 0.08,
                                   placeholder_text = "Insertar Bufete")
-        self.office_entry.bind("<Return>", lambda event: self.position_entry.focus_set())
-        
-        self.position_label = Label(master = self, text = "Cargo", text_color = "black", font = self.font, 
-                                relx = 0.075, rely = 0.57, relwidth = 0.8, relheight = 0.1)
-        
-        self.position_entry = Entry(master = self, relx = 0.075, rely = 0.67, relwidth = 0.85, relheight = 0.08, 
-                                    placeholder_text = "Insertar Cargo")
-        self.position_entry.bind("<Return>", lambda event: self.jump_to_name_and_save())
+        self.office_entry.bind("<Return>", lambda event: self.jump_to_name_and_save())
         
         self.cancel_button = Button(master = self, text = "Cancelar", relx = 0.2, rely = 0.85,
                                   relwidth = 0.2, relheight = 0.1, command = self.cancel)
@@ -51,7 +44,7 @@ class WriteEvent(Event):
         
     def get_database_name(self) -> str:
         """Method to get database name"""
-        return "_".join(self.master.new_panel_frame.name_entry.get().split()) + "".join(self.master.new_panel_frame.date.split("-"))
+        return "_".join(self.master.new_panel_frame.name_entry.get().split()).title() + "".join(self.master.new_panel_frame.date.split("-"))
     
         
     def jump_to_name_and_save(self) -> None:
@@ -60,9 +53,8 @@ class WriteEvent(Event):
             self.verification_message(valid = False)
             return
          
-        name = self.name_entry.get()
-        office = self.office_entry.get()
-        position = self.position_entry.get()
+        name = self.name_entry.get().title()
+        office = self.office_entry.get().title()
         accredited = "no"
         
         conn  = sqlite3.connect("events.db")
@@ -71,11 +63,10 @@ class WriteEvent(Event):
         data_insert = f"""INSERT INTO {self.get_database_name()} 
                         (Nombre,
                         Bufete,
-                        Cargo,
                         Acreditado)
-                        VALUES (?,?,?,?)"""
+                        VALUES (?,?,?)"""
                             
-        data_insert_tuple = (name, office, position, accredited)
+        data_insert_tuple = (name, office, accredited)
         
         cursor.execute(data_insert, data_insert_tuple)
         conn.commit()
@@ -98,7 +89,6 @@ class WriteEvent(Event):
         """Method to clean entries"""
         self.name_entry.delete(0, "end")
         self.office_entry.delete(0, "end")
-        self.position_entry.delete(0, "end")
         
     def cancel(self) -> None:
         """Cancel method"""
@@ -116,10 +106,12 @@ class WriteEvent(Event):
     
     def save(self) -> None:
         """Method to save the data and open it"""
+        self.master.event_name.configure(text = f"Evento: {' '.join(self.get_database_name()[:-8].split('_'))}")
         self.clean_entries()
         self.master.current_database_of_accredited(self.get_database_name())
         self.master.recorver_event.refresh()
         self.master.new_panel_frame.cancel()
+        self.master.extract_button.configure(state = "normal")
         self.animate() 
  
  
@@ -217,6 +209,7 @@ class RecorverEvent(Event):
         Event.cancel(self)
         self.search.delete(0, "end")
         self.search.configure(placeholder_text = "Buscar")
+        self.master.extract_button.configure(state = "normal")
         self.refresh()
         
         
@@ -250,9 +243,24 @@ class CalendarEvent(Event):
             self.master.new_panel_frame.date = self.calendar.get_date()
             self.animate()
         
+########################
+# CONFIRMATION FRAME
+#######################       
+@dataclass
+class Confirmation(Event):
+    """Frame to get confirmation"""
+    def __post_init__(self) -> None:
+        Event.__post_init__(self)       
         
+    def widgets(self) -> None:
+        """Method to insert all widgets"""
+        Event.widgets(self)    
+        self.font = ctk.CTkFont("Arial", 30, "bold")
         
+        self.message = Label(master = self, text = "Excel extraido", text_color = "#860505", font = self.font, 
+            relx = 0.28, rely = 0.2, relwidth = 0.8, relheight = 0.5)
         
-
+        self.ok_button = Button(master = self, text = "OK", relx = 0.4, rely = 0.85,
+                                  relwidth = 0.2, relheight = 0.1, command = self.animate)
         
         

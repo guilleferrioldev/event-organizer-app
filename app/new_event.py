@@ -100,7 +100,6 @@ class NewEvent(InterfaceSlidingFrame):
         table = f""" CREATE TABLE IF NOT EXISTS {name}
                     (Nombre TEXT,
                     Bufete TEXT,
-                    Cargo TEXT,
                     Acreditado Text)
         ;"""
         cursor.execute(table)
@@ -124,7 +123,7 @@ class NewEvent(InterfaceSlidingFrame):
         if excel.shape[1] > 3:
             return
         
-        excel.columns = ["Nombre", "Bufete", "Cargo"]
+        excel.columns = ["Nombre", "Bufete"]
         excel["Acreditado"] = ["no" for i in range(excel.shape[0])]
         
         engine = create_engine('sqlite:///events.db')
