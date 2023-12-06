@@ -201,6 +201,8 @@ class InterfaceSlidingFrame(ABC, ctk.CTkFrame):
     master: ctk.CTkFrame
     start_pos: float = 1.0
     end_pos: float = 0.7
+    text: str = ""
+    relx_for_confirmation_messages : float = None
     
     @abstractmethod
     def __post_init__(self) -> None:

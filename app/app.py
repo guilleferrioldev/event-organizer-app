@@ -87,12 +87,12 @@ class App(ctk.CTk):
         self.recorver_event = RecorverEvent(self)
         self.calendar_event_frame = CalendarEvent(self)
         self.write_event = WriteEvent(self)
-        self.confirmation = Confirmation(self)
+        self.confirmation_of_export_from_excel = Confirmation(self, text = "Excel extraido", relx_for_confirmation_messages = 0.28)
         
         self.new_event_button = Button(master = self, text = "Nuevo Evento", relx = 0.85,
                                        rely = 0.04, relwidth = 0.1, relheight = 0.05, command = self.animate_new_panel)
         
-        self.extract_button = Button(master = self, text = "Extraer", relx = 0.74, state = "disabled",
+        self.extract_button = Button(master = self, text = "Extraer excel", relx = 0.74, state = "disabled",
                                        rely = 0.04, relwidth = 0.1, relheight = 0.05, command = self.extract_data_to_excel)
         
     def animate_new_panel(self) -> None:
@@ -249,7 +249,7 @@ class App(ctk.CTk):
         data.columns = ["Nombre y Apellidos", "Bufete/Categoría", "Acreditado"] 
         path = os.path.expanduser('~/Documents')
         data.to_excel(f"{os.path.join(path, self.database[:-8])}.xlsx", index=False)
-        self.confirmation.animate()
+        self.confirmation_of_export_from_excel.animate()
         
 if __name__ == "__main__": 
     App()

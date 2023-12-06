@@ -247,7 +247,7 @@ class CalendarEvent(Event):
 # CONFIRMATION FRAME
 #######################       
 @dataclass
-class Confirmation(Event):
+class Confirmation(Event):    
     """Frame to get confirmation"""
     def __post_init__(self) -> None:
         Event.__post_init__(self)       
@@ -255,10 +255,15 @@ class Confirmation(Event):
     def widgets(self) -> None:
         """Method to insert all widgets"""
         Event.widgets(self)    
-        self.font = ctk.CTkFont("Arial", 30, "bold")
+        self.font = ctk.CTkFont("Arial", 15)
+        self.big_font = ctk.CTkFont("Arial", 30, "bold")
         
-        self.message = Label(master = self, text = "Excel extraido", text_color = "#860505", font = self.font, 
-            relx = 0.28, rely = 0.2, relwidth = 0.8, relheight = 0.5)
+        self.message = Label(master = self, text = self.text, text_color = "#860505", font = self.big_font, 
+                relx = self.relx_for_confirmation_messages, rely = 0.2, relwidth = 0.8, relheight = 0.5)
+        
+        if self.text == "No es posible importarlo":
+            Label(master = self, text = "El Excel debe tener 2 columnas sólamente", text_color = "black", font = self.font, 
+                relx = 0.21, rely = 0.5, relwidth = 0.6, relheight = 0.2)
         
         self.ok_button = Button(master = self, text = "OK", relx = 0.4, rely = 0.85,
                                   relwidth = 0.2, relheight = 0.1, command = self.animate)

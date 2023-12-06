@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 import sqlite3
 from dataclasses import dataclass
 from interfaces import Label, Entry, InterfaceSlidingFrame, ImageButton, Button
-from events import WriteEvent, RecorverEvent, CalendarEvent
+from events import WriteEvent, RecorverEvent, CalendarEvent, Confirmation
 
 @dataclass
 class NewEvent(InterfaceSlidingFrame):
@@ -109,7 +109,7 @@ class NewEvent(InterfaceSlidingFrame):
         
     def import_excel(self) -> None:
         """Method to open the excel"""
-        filename = filedialog.askopenfilename(title = "Abrir excel", initialdir = "~")
+        filename = filedialog.askopenfilename(title = "Abrir excel", initialdir = ".")
         if filename:
             path = Path(filename)
             self._path_to_sql(path)
@@ -121,13 +121,14 @@ class NewEvent(InterfaceSlidingFrame):
         
         excel = pd.read_excel(path)
         if excel.shape[1] > 3:
+            Confirmation(self.master, text= "No es posible importarlo", relx_for_confirmation_messages = 0.13).animate()
             return
         
         excel.columns = ["Nombre", "Bufete"]
         excel["Acreditado"] = ["no" for i in range(excel.shape[0])]
         
         engine = create_engine('sqlite:///events.db')
-        name_of_table = "_".join(self.name_entry.get().split()) + "".join(self.date.split("-"))
+        name_of_table = "_".join(self.name_entry.get().split()).title() + "".join(self.date.split("-"))
         excel.to_sql(name_of_table, con=engine, if_exists='replace', index=False)
         
         self._open(name_of_table)
