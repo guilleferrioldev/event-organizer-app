@@ -279,22 +279,25 @@ class InterfaceRegisterNameFrames(ABC, ctk.CTkFrame):
         self.pack(expand = True, fill = "x", padx = 5, pady = 5)
     
     def widgets(self) -> None:
-        self.name_font = font = ctk.CTkFont("Arial", 20, "bold")
-        self.other_font = font = ctk.CTkFont("Arial", 15)
+        self.name_font = font = ctk.CTkFont("Arial", 18, "bold")
+        self.office_font = font = ctk.CTkFont("Arial", 15)
         
         self.name_label = Label(master = self, text = self.name, text_color = "#860505", font = self.name_font, 
                              relx = 0.05, rely = 0.2, relwidth = 0.8, relheight = 0.3)
         
-        self.office_label = Label(master = self, text = f"Bufete: {self.office}", text_color = "#77767b", font = self.other_font, 
-                             relx = 0.05, rely = 0.6, relwidth = 0.6, relheight = 0.2)
+        self.office_label = Label(master = self, text = f"Bufete/Cat: {self.office}", text_color = "#77767b", font = self.office_font, 
+                             relx = 0.05, rely = 0.6, relwidth = 0.8, relheight = 0.2)
 
 @dataclass
 class FrameToRegister(InterfaceRegisterNameFrames):
     """Class to create concrete name frames for scrollable lists in the main window"""
     def __post_init__(self) -> None:
         InterfaceRegisterNameFrames.__post_init__(self)  
-        self.check = Button(master = self, text = "+", relx = 0.88, rely = 0.12,
+        self.check = Button(master = self, text = "\u2194", relx = 0.88, rely = 0.12,
                             relwidth = 0.08, relheight = 0.25, command = self.register)
+        
+        self.update_button = Button(master = self, text = "🔄", relx = 0.88, rely = 0.6,
+                            relwidth = 0.08, relheight = 0.25, command = self.update)
         
     def register(self) -> None:
         conn  = sqlite3.connect("events.db")
@@ -308,7 +311,63 @@ class FrameToRegister(InterfaceRegisterNameFrames):
         conn.close()
         
         self.master.master.master.master.current_database_of_accredited(self.database)
+        
+    def update(self) -> None:
+        self.change_name = Entry(master = self, relx = 0.05, rely = 0.2, relwidth = 0.8, relheight = 0.3, 
+                                placeholder_text = self.name)
+        self.change_name.bind("<Return>", lambda event: self.change_name_and_destroy())
+        
+        self.change_category = Entry(master = self, relx = 0.05, rely = 0.6, relwidth = 0.8, relheight = 0.2, 
+                                placeholder_text = self.office)
+        self.change_category.bind("<Return>", lambda event: self.change_category_and_destroy())
+        
+    def change_name_and_destroy(self) -> None:
+        if not self.change_name.get():
+            self.destroy_name_entry()
+            return 
+        
+        self.name_label.configure(text = self.change_name.get().title())
+        
+        instruction = f"UPDATE {self.database} SET Nombre='{self.change_name.get().title()}' WHERE Nombre='{self.name}' AND Bufete='{self.office}'"
+        self.query(instruction)
+        self.name = self.change_name.get().title()
+        self.destroy_name_entry()
+        
+    def destroy_name_entry(self) -> None:
+        self.change_name.destroy()
+        try:
+            self.change_category.focus_set()
+        except:
+            self.master.master.master.master.current_database_of_accredited(self.database)
+        
+    def change_category_and_destroy(self) -> None:
+        if not self.change_category.get():
+            self.destroy_category_entry()
+            return 
+        
+        self.office_label.configure(text = f"Bufete/Cat: {self.change_category.get().title()}")
+        
+        instruction = f"UPDATE {self.database} SET Bufete='{self.change_category.get().title()}' WHERE Nombre='{self.name}' AND Bufete='{self.office}'"
+        self.query(instruction)
+        self.office = self.change_category.get().title()
+        self.destroy_category_entry()
+        
+        
+    def destroy_category_entry(self) -> None:
+        self.change_category.destroy()
+        try:
+            self.change_name.focus_set()
+        except:
+            self.master.master.master.master.current_database_of_accredited(self.database)
+        
+    def query(self, instruction: str) -> None:
+        conn = sqlite3.connect('events.db')
+        cursor = conn.cursor()
 
+        cursor.execute(instruction)
+
+        conn.commit()
+        conn.close()
 
 ####################
 # EVENT NAME FRAMES

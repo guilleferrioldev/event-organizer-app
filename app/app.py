@@ -250,6 +250,3 @@ class App(ctk.CTk):
         path = os.path.expanduser('~/Documents')
         data.to_excel(f"{os.path.join(path, self.database[:-8])}.xlsx", index=False)
         self.confirmation_of_export_from_excel.animate()
-        
-if __name__ == "__main__": 
-    App()
