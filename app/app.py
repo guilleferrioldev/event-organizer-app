@@ -49,7 +49,7 @@ class App(ctk.CTk):
                              relx = 0.05, rely = 0.01, relwidth = 0.2, relheight = 0.1)
         
         self.event_name = Label(master = self, text = "Evento: ", text_color = "#860505", font = self.small_font, 
-                             relx = 0.05, rely = 0.085, relwidth = 0.2, relheight = 0.05)
+                             relx = 0.05, rely = 0.085, relwidth = 0.8, relheight = 0.05)
         
         self.count_list = Label(master = self, text = "Cantidad:   0", text_color = "#77767b", font = self.very_small_font,
                                 relx = 0.385, rely = 0.13, relwidth = 0.15, relheight = 0.03)
@@ -158,8 +158,8 @@ class App(ctk.CTk):
         """Method to clean and enable widgets"""
         self.search_to_register.delete(0, "end")
         self.search_already_registered.delete(0, "end")
-        self.search_to_register.configure(state = "normal", placeholder_text = "Buscar")
-        self.search_already_registered.configure(state = "normal", placeholder_text = "Buscar")
+        self.search_to_register.configure(state = "normal")
+        self.search_already_registered.configure(state = "normal")
         self.menu_to_register.configure(state = "normal")
         self.menu_already_registered.configure(state = "normal")
             
