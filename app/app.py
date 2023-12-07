@@ -3,7 +3,7 @@ import sqlite3
 from dataclasses import dataclass 
 from new_event import NewEvent
 from interfaces import singleton, Label, Scrollable, Entry, Menu, Button, FrameToRegister
-from events import WriteEvent, RecorverEvent, CalendarEvent, Confirmation
+from events import WriteEvent, RecorverEvent, CalendarEvent, Confirmation, AddPeopleEvent, ResetEvent
 import pickle
 import os
 import pandas as pd
@@ -87,13 +87,21 @@ class App(ctk.CTk):
         self.recorver_event = RecorverEvent(self)
         self.calendar_event_frame = CalendarEvent(self)
         self.write_event = WriteEvent(self)
+        self.add_people = AddPeopleEvent(self)
+        self.reset = ResetEvent(self)
         self.confirmation_of_export_from_excel = Confirmation(self, text = "Excel extraido", relx_for_confirmation_messages = 0.28)
         
         self.new_event_button = Button(master = self, text = "Nuevo Evento", relx = 0.85,
-                                       rely = 0.04, relwidth = 0.1, relheight = 0.05, command = self.animate_new_panel)
+                                       rely = 0.035, relwidth = 0.1, relheight = 0.05, command = self.animate_new_panel)
         
-        self.extract_button = Button(master = self, text = "Extraer excel", relx = 0.74, state = "disabled",
-                                       rely = 0.04, relwidth = 0.1, relheight = 0.05, command = self.extract_data_to_excel)
+        self.extract_button = Button(master = self, text = "Extraer excel", relx = 0.744, state = "disabled",
+                                       rely = 0.035, relwidth = 0.1, relheight = 0.05, command = self.extract_data_to_excel)
+        
+        self.add_people_button = Button(master = self, text = "+ Participantes", relx = 0.637, state = "disabled",
+                                       rely = 0.035, relwidth = 0.1, relheight = 0.05, command = self.add_people.animate)
+        
+        self.reset_button = Button(master = self, text = "Reiniciar", relx = 0.53, state = "disabled",
+                                    rely = 0.035, relwidth = 0.1, relheight = 0.05, command = self.reset.animate)
         
     def animate_new_panel(self) -> None:
         """Method to animate the new panel"""
@@ -250,3 +258,5 @@ class App(ctk.CTk):
         path = os.path.expanduser('~/Documents')
         data.to_excel(f"{os.path.join(path, self.database[:-8])}.xlsx", index=False)
         self.confirmation_of_export_from_excel.animate()
+        
+App()

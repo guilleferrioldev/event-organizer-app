@@ -102,7 +102,6 @@ class Entry(InterfaceEntry):
         InterfaceEntry.__post_init__(self)   
         
 
-
 ####################
 # OPTION MENU
 ####################   
@@ -293,7 +292,7 @@ class FrameToRegister(InterfaceRegisterNameFrames):
     """Class to create concrete name frames for scrollable lists in the main window"""
     def __post_init__(self) -> None:
         InterfaceRegisterNameFrames.__post_init__(self)  
-        self.check = Button(master = self, text = "\u2194", relx = 0.88, rely = 0.12,
+        self.check = Button(master = self, text = "\u2194", relx = 0.88, rely = 0.15,
                             relwidth = 0.08, relheight = 0.25, command = self.register)
         
         self.update_button = Button(master = self, text = "🔄", relx = 0.88, rely = 0.6,
@@ -312,14 +311,20 @@ class FrameToRegister(InterfaceRegisterNameFrames):
         
         self.master.master.master.master.current_database_of_accredited(self.database)
         
-    def update(self) -> None:
-        self.change_name = Entry(master = self, relx = 0.05, rely = 0.2, relwidth = 0.8, relheight = 0.3, 
+    def update(self) -> None:  
+        try:   
+            self.destroy_name_entry()
+            self.destroy_category_entry()
+        except:
+            self.change_name = Entry(master = self, relx = 0.05, rely = 0.2, relwidth = 0.8, relheight = 0.3, 
                                 placeholder_text = self.name)
-        self.change_name.bind("<Return>", lambda event: self.change_name_and_destroy())
+            self.change_name.bind("<Return>", lambda event: self.change_name_and_destroy())
         
-        self.change_category = Entry(master = self, relx = 0.05, rely = 0.6, relwidth = 0.8, relheight = 0.2, 
+            self.change_category = Entry(master = self, relx = 0.05, rely = 0.6, relwidth = 0.8, relheight = 0.2, 
                                 placeholder_text = self.office)
-        self.change_category.bind("<Return>", lambda event: self.change_category_and_destroy())
+            self.change_category.bind("<Return>", lambda event: self.change_category_and_destroy())
+            
+            self.check.configure(text = "X", command = self.delete)
         
     def change_name_and_destroy(self) -> None:
         if not self.change_name.get():
@@ -368,6 +373,11 @@ class FrameToRegister(InterfaceRegisterNameFrames):
 
         conn.commit()
         conn.close()
+        
+    def delete(self) -> None:
+        self.query(f"DELETE FROM {self.database} WHERE Nombre='{self.name}' AND Bufete='{self.office}'")
+        self.master.master.master.master.current_database_of_accredited(self.database)
+
 
 ####################
 # EVENT NAME FRAMES

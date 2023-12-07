@@ -2,6 +2,7 @@ import customtkinter as ctk
 from tkcalendar import Calendar
 from datetime import datetime
 import sqlite3
+from datetime import datetime
 from dataclasses import dataclass
 from interfaces import Scrollable, Button, Event, EventNameFrames, Entry, Label
 from collections import defaultdict
@@ -112,9 +113,55 @@ class WriteEvent(Event):
         self.master.recorver_event.refresh()
         self.master.new_panel_frame.cancel()
         self.master.extract_button.configure(state = "normal")
+        self.master.add_people_button.configure(state = "normal")
+        self.master.reset_button.configure(state = "normal")
         self.animate() 
- 
- 
+
+
+########################
+# ADD PEOPLE FRAME
+####################### 
+@dataclass
+class AddPeopleEvent(WriteEvent):    
+    """Frame to get confirmation"""
+    def __post_init__(self) -> None:
+        WriteEvent.__post_init__(self) 
+        self.event_label.configure(text = "Agregar más participantes")
+        self.save_button.configure(text = "Agregar")
+        self.new_people_to_insert = []
+         
+    def get_database_name(self):
+        return self.master.database
+    
+    def jump_to_name_and_save(self) -> None:
+        name = self.name_entry.get().title()
+        office = self.office_entry.get().title()
+        accredited = "no"
+        
+        self.new_people_to_insert.append((name, office, accredited))
+        
+        self.clean_entries()
+        self.name_entry.focus_set()
+    
+    def save(self):
+        conn = sqlite3.connect("events.db")
+        cursor = conn.cursor()
+        
+        for data in self.new_people_to_insert:
+            cursor.execute(f"INSERT INTO {self.get_database_name()} (Nombre, Bufete, Acreditado) VALUES (?,?,?)", data)
+        
+        conn.commit()
+        conn.close()
+        
+        self.master.current_database_of_accredited(self.get_database_name())
+        self.cancel()
+    
+    def cancel(self) -> None:
+        self.new_people_to_insert = []
+        self.clean_entries()
+        self.animate()
+
+
 ####################
 # RECORVER FRAME
 ####################                 
@@ -210,6 +257,8 @@ class RecorverEvent(Event):
         self.search.delete(0, "end")
         self.search.configure(placeholder_text = "Buscar")
         self.master.extract_button.configure(state = "normal")
+        self.master.add_people_button.configure(state = "normal")
+        self.master.reset_button.configure(state = "normal")
         self.refresh()
         
         
@@ -242,6 +291,19 @@ class CalendarEvent(Event):
             self.master.new_panel_frame.date_button.configure(text = self.calendar.get_date())
             self.master.new_panel_frame.date = self.calendar.get_date()
             self.animate()
+                   
+@dataclass
+class CalendarResetEvent(CalendarEvent):
+    """Frame to change the date"""
+    def __post_init__(self) -> None:
+        CalendarEvent.__post_init__(self) 
+        
+    def change_date(self) -> None:
+        if datetime.strptime(self.calendar.get_date(), '%d-%m-%Y').date() >= self.today:
+            self.master.reset.date_button.configure(text = self.calendar.get_date())
+            self.master.reset.date = self.calendar.get_date()
+            self.animate()
+       
         
 ########################
 # CONFIRMATION FRAME
@@ -253,8 +315,8 @@ class Confirmation(Event):
         Event.__post_init__(self)       
         
     def widgets(self) -> None:
-        """Method to insert all widgets"""
-        Event.widgets(self)    
+        """Method to insert all widgets""" 
+        Event.widgets(self) 
         self.font = ctk.CTkFont("Arial", 15)
         self.big_font = ctk.CTkFont("Arial", 30, "bold")
         
@@ -267,5 +329,89 @@ class Confirmation(Event):
         
         self.ok_button = Button(master = self, text = "OK", relx = 0.4, rely = 0.85,
                                   relwidth = 0.2, relheight = 0.1, command = self.animate)
+   
+   
+########################
+# RESET FRAME
+####################### 
+@dataclass
+class ResetEvent(Event):    
+    """Frame to get confirmation"""
+    def __post_init__(self) -> None:
+        Event.__post_init__(self) 
         
+    def widgets(self) -> None:
+        """Method to insert all widgets"""
+        Event.widgets(self) 
+        self.event_label.configure(text = "Reiniciar la lista")
+        
+        self.name_label = Label(master = self, text = "Nombre del evento", text_color = "black", font = self.font, 
+                                relx = 0.075, rely = 0.3, relwidth = 0.8, relheight = 0.1)
+        
+        self.name_entry = Entry(master = self, relx = 0.075, rely = 0.4, relwidth = 0.85, relheight = 0.08, 
+                                placeholder_text = "Insertar nuevo nombre")
+        
+        self.calendar = CalendarResetEvent(self.master)
+        self.today  = datetime.now().date().strftime("%d-%m-%Y")
+        self.date = self.today
+        self.date_button = Button(master = self, text = f"{self.date}", relx = 0.4, rely = 0.53,
+                                  relwidth = 0.16, relheight = 0.1, command = self.change_date)
+        
+        self.cancel_button = Button(master = self, text = "Cancelar", relx = 0.2, rely = 0.85,
+                                  relwidth = 0.2, relheight = 0.1, command = self.cancel)
+        
+        self.save_button = Button(master = self, text = "Aceptar", relx = 0.55, rely = 0.85,
+                                  relwidth = 0.2, relheight = 0.1, command = self.save)
+    
+    def change_date(self) -> None:
+        self.calendar.animate()
+        
+    def save(self) -> None:
+        if not self.name_entry.get():
+            self.name_entry.configure(placeholder_text = "¡Debe insertar el nuevo nombre del evento!", placeholder_text_color = "red")
+            return 
+
+        
+        database = "_".join(self.name_entry.get().split()).title() + "".join(self.date.split("-"))     
+        self.insert_database(database)
+        self.master.recorver_event.refresh()
+        self.master.current_database_of_accredited(database)
+        self.cancel()  
+        
+    def query(self, instruction: str) -> None:
+        conn = sqlite3.connect("events.db")
+        cursor = conn.cursor()
+        
+        cursor.execute(instruction)
+        data = cursor.fetchall()
+        
+        conn.commit()
+        conn.close()
+        return data
+        
+    def create_database(self, database: str) -> None:
+        table = f""" CREATE TABLE IF NOT EXISTS {database}
+                    (Nombre TEXT,
+                    Bufete TEXT,
+                    Acreditado Text)
+        ;"""
+        self.query(table)
+        
+    def insert_database(self, database: str) -> None:
+        self.create_database(database)
+        data = self.query(f"SELECT Nombre, Bufete FROM {self.master.database}")
+        
+        conn = sqlite3.connect("events.db")
+        cursor = conn.cursor()
+        
+        for tuple_ in data:
+            cursor.execute(f"INSERT INTO {database} (Nombre, Bufete, Acreditado) VALUES (?,?,?)", (tuple_[0], tuple_[1], 'no'))
+            
+        conn.commit()
+        conn.close()
+        
+    def cancel(self) -> None:
+        self.date_button.configure(text = f"{self.today}")
+        self.name_entry.delete(0, "end")
+        self.animate()
         
