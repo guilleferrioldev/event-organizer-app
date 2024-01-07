@@ -8,6 +8,7 @@ import pickle
 import os
 import pandas as pd
 from typing import List
+from functools import lru_cache
 
 @singleton
 class App(ctk.CTk):
@@ -113,7 +114,7 @@ class App(ctk.CTk):
         conn  = sqlite3.connect("events.db")
         conn.commit()
         conn.close()
-        
+       
     def _extract_data(self, name: str) -> List:
         """Method to extract the data from the database"""
         instruction = f"SELECT * FROM {name}"
@@ -193,7 +194,7 @@ class App(ctk.CTk):
         """Method to change the state of both counter labels and display the result"""
         self.count_list.configure(text = f"Cantidad: {len([i for i in self.to_register.winfo_children()])}")
         self.count_registered_list.configure(text = f"Cantidad: {len([i for i in self.already_registered.winfo_children()])}")
-           
+         
     def execute_instruction(self, instruction: str, scrollable: Scrollable) -> None:
         """Method to excecute instructions, make queries and insert data"""
         data = self.query(instruction)
@@ -255,8 +256,9 @@ class App(ctk.CTk):
     def extract_data_to_excel(self):
         data = pd.DataFrame(self._extract_data(self.database))
         data.columns = ["Nombre y Apellidos", "Bufete/Categoría", "Acreditado"] 
+        data = data.sort_values(by="Nombre y Apellidos")
         path = os.path.expanduser('~/Documents')
         data.to_excel(f"{os.path.join(path, self.database[:-8])}.xlsx", index=False)
         self.confirmation_of_export_from_excel.animate()
         
-App()
+
