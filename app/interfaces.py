@@ -409,6 +409,9 @@ class InterfaceEventNameFrames(ABC, ctk.CTkFrame):
         self.date_label = Label(master = self, text = f"Fecha: {date}", text_color = "#77767b", font = self.date_font, 
                              relx = 0.05, rely = 0.6, relwidth = 0.6, relheight = 0.2)
         self.date_label.bind("<Button>", lambda event: self.event())
+        
+        self.delete_button = Button(master = self, text = "X", command = self.delete,
+                                    relx = 0.85, rely = 0.15, relwidth = 0.1, relheight = 0.3)
     
         self.bind("<Button>", lambda event: self.event())
     
@@ -417,6 +420,18 @@ class InterfaceEventNameFrames(ABC, ctk.CTkFrame):
         self.master.master.master.master.master.new_panel_frame.cancel()
         self.master.master.master.master.master.recorver_event.cancel()
         self.master.master.master.master.master.event_name.configure(text = f"Evento: {' '.join(self.table_name[:-8].split('_'))}")
+        
+    def delete(self):
+        conn  = sqlite3.connect("events.db")
+        cursor = conn.cursor()
+        
+        instruction = f"DROP TABLE IF EXISTS '{self.table_name}'"
+        cursor.execute(instruction)
+        
+        conn.commit()
+        conn.close()
+        
+        self.master.master.master.master.master.recorver_event.refresh()
         
         
 @dataclass
